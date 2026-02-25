@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// ADMIN
+// ========================================
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// ========================================
+// PRODUCT
+// ========================================
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String
+  shortDesc    String?
+  price        Float
+  comparePrice Float?
+  stock        Int      @default(0)
+  sku          String?  @unique
+  weight       Float?   // in grams
+  dimensions   String?  // "LxWxH cm"
+
+  // Images stored as JSON array of Cloudinary URLs
+  images       String[] // ["url1", "url2", ...]
+  thumbnail    String?
+
+  // Categorization
+  category     Category @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  tags         String[]
+
+  // Ingredients & Details
+  ingredients  String?
+  howToUse     String?
+  benefits     String[]
+
+  // Status
+  isActive     Boolean  @default(true)
+  isFeatured   Boolean  @default(false)
+  isNew        Boolean  @default(false)
+
+  // SEO
+  metaTitle    String?
+  metaDesc     String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orderItems   OrderItem[]
+  reviews      Review[]
+
+  @@map("products")
+}
+
+// ========================================
+// CATEGORY
+// ========================================
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  image       String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+
+  @@map("categories")
+}
+
+// ========================================
+// ORDER
+// ========================================
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING)
+
+  // Customer Info
+  customerName  String
+  customerEmail String
+  customerPhone String
+
+  // Shipping Address
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  state         String
+  pincode       String
+  country       String      @default("India")
+
+  // Pricing
+  subtotal      Float
+  shippingFee   Float       @default(0)
+  discount      Float       @default(0)
+  total         Float
+
+  // Payment
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod String?
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+
+  // Notes
+  notes         String?
+
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+  productName String   // Snapshot at time of order
+  productImage String?
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+
+  @@map("order_items")
+}
+
+// ========================================
+// REVIEW
+// ========================================
+model Review {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  author    String
+  email     String
+  rating    Int      // 1-5
+  title     String?
+  body      String
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}
+
+// ========================================
+// NEWSLETTER
+// ========================================
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("newsletter")
+}
+
+// ========================================
+// COUPON
+// ========================================
+model Coupon {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  type        CouponType  @default(PERCENTAGE)
+  value       Float
+  minOrder    Float?
+  maxUses     Int?
+  usedCount   Int         @default(0)
+  isActive    Boolean     @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@map("coupons")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}

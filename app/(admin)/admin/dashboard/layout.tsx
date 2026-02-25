@@ -1,0 +1,38 @@
+import { getAdminFromCookie } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+
+export default async function AdminDashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const admin = await getAdminFromCookie();
+  if (!admin) redirect("/admin/login");
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <AdminSidebar />
+      <main className="flex-1 flex flex-col min-h-screen overflow-auto">
+        {/* Top Bar */}
+        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+          <div />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-forest-100 rounded-full flex items-center justify-center">
+              <span className="font-body text-xs font-semibold text-forest-700">
+                {admin.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p className="font-body text-sm font-medium text-gray-800">
+                {admin.name}
+              </p>
+              <p className="font-body text-xs text-gray-400">{admin.email}</p>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 p-6 md:p-8">{children}</div>
+      </main>
+    </div>
+  );
+}
