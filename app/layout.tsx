@@ -55,8 +55,11 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    shortcut: "/favicon-32x32.png",
     apple: "/apple-touch-icon.png",
   },
 };
@@ -83,17 +86,17 @@ export default function RootLayout({
           toastOptions={{
             className: "font-body text-sm",
             style: {
-              background: "#FAF8F3",
-              color: "#2D4A1E",
-              border: "1px solid #D4C8B0",
+              background: "#FFFDF7",
+              color: "#111111",
+              border: "1px solid #E8D8A0",
               borderRadius: "4px",
               boxShadow:
                 "0 10px 40px rgba(0,0,0,0.08), 0 2px 10px rgba(0,0,0,0.04)",
             },
             success: {
               iconTheme: {
-                primary: "#2D4A1E",
-                secondary: "#FAF8F3",
+                primary: "#C8A020",
+                secondary: "#FFFDF7",
               },
             },
           }}

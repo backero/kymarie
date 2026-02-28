@@ -13,7 +13,9 @@
       "Bash(cat:*)",
       "Bash(PGPASSWORD=123456 \"/c/Program Files/PostgreSQL/17/bin/psql.exe\":*)",
       "Bash(cd /d/Developer/Backero/kumarie && npm run db:push 2>&1)",
-      "Bash(cd /d/Developer/Backero/kumarie && npx ts-node --esm --experimental-specifier-resolution=node prisma/seed.ts 2>&1 || npx tsx prisma/seed.ts 2>&1)"
+      "Bash(cd /d/Developer/Backero/kumarie && npx ts-node --esm --experimental-specifier-resolution=node prisma/seed.ts 2>&1 || npx tsx prisma/seed.ts 2>&1)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

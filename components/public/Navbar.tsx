@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ShoppingBag, Menu, X, Search, Leaf } from "lucide-react";
+import Image from "next/image";
+import { ShoppingBag, Menu, X, Search } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { CartDrawer } from "./CartDrawer";
 import { cn } from "@/lib/utils";
@@ -42,20 +43,17 @@ export function Navbar() {
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2 group"
+              className="flex items-center group"
               aria-label="Kumarie Home"
             >
-              <div className="w-8 h-8 relative">
-                <Leaf className="w-8 h-8 text-forest-500 group-hover:text-amber-500 transition-colors duration-300" strokeWidth={1.5} />
-              </div>
-              <span
-                className={cn(
-                  "font-display text-2xl font-medium tracking-wide transition-colors duration-300",
-                  isScrolled ? "text-forest-500" : "text-forest-600"
-                )}
-              >
-                Kumarie
-              </span>
+              <Image
+                src="/logo.png"
+                alt="Kumarie"
+                width={130}
+                height={52}
+                className="h-10 w-auto object-contain transition-opacity duration-300 group-hover:opacity-80"
+                priority
+              />
             </Link>
 
             {/* Desktop Nav Links */}

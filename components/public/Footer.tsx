@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Leaf, Instagram, Facebook, Twitter, Mail, MapPin, Phone } from "lucide-react";
+import Image from "next/image";
+import { Instagram, Facebook, Twitter, Mail, MapPin, Phone } from "lucide-react";
 
 const footerLinks = {
   shop: [
@@ -34,11 +35,14 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 mb-5 group">
-              <Leaf className="w-7 h-7 text-amber-400 group-hover:rotate-12 transition-transform duration-300" strokeWidth={1.5} />
-              <span className="font-display text-2xl text-cream-100 tracking-wide">
-                Kumarie
-              </span>
+            <Link href="/" className="flex items-center mb-5 group">
+              <Image
+                src="/logo.png"
+                alt="Kumarie"
+                width={130}
+                height={52}
+                className="h-10 w-auto object-contain brightness-0 invert group-hover:opacity-80 transition-opacity duration-300"
+              />
             </Link>
 
             <p className="font-body text-sm text-cream-300 leading-relaxed max-w-xs mb-6">

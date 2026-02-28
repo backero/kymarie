@@ -158,7 +158,7 @@ export default function CheckoutPage() {
           email: formData.customerEmail,
           contact: formData.customerPhone,
         },
-        theme: { color: "#2D4A1E" },
+        theme: { color: "#C8A020" },
       };
 
       if (typeof window !== "undefined") {

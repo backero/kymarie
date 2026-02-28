@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Leaf, Eye, EyeOff, Lock } from "lucide-react";
+import Image from "next/image";
+import { Eye, EyeOff, Lock } from "lucide-react";
 import { adminLogin } from "@/actions/admin";
 import toast from "react-hot-toast";
 
@@ -68,14 +69,15 @@ export default function AdminLoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Leaf
-              className="w-8 h-8 text-amber-400"
-              strokeWidth={1.5}
+          <div className="flex items-center justify-center mb-2">
+            <Image
+              src="/logo.png"
+              alt="Kumarie"
+              width={160}
+              height={64}
+              className="h-14 w-auto object-contain brightness-0 invert"
+              priority
             />
-            <span className="font-display text-3xl text-cream-100 tracking-wide">
-              Kumarie
-            </span>
           </div>
           <p className="font-body text-xs tracking-widest uppercase text-cream-400">
             Admin Portal
