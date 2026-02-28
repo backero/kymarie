@@ -165,14 +165,14 @@ export function ProductForm({ product, categories }: ProductFormProps) {
         thumbnail: images[0],
         tags,
         benefits,
-        comparePrice: data.comparePrice || null,
-        weight: data.weight || null,
-        sku: data.sku || null,
-        shortDesc: data.shortDesc || null,
-        ingredients: data.ingredients || null,
-        howToUse: data.howToUse || null,
-        metaTitle: data.metaTitle || null,
-        metaDesc: data.metaDesc || null,
+        comparePrice: data.comparePrice || undefined,
+        weight: data.weight || undefined,
+        sku: data.sku || undefined,
+        shortDesc: data.shortDesc || undefined,
+        ingredients: data.ingredients || undefined,
+        howToUse: data.howToUse || undefined,
+        metaTitle: data.metaTitle || undefined,
+        metaDesc: data.metaDesc || undefined,
       };
 
       const result = product
