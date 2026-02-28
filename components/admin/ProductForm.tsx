@@ -6,7 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Image from "next/image";
-import { Plus, X, Upload, Loader2 } from "lucide-react";
+import { Plus, X, Upload, Loader2, Link as LinkIcon } from "lucide-react";
 import { createProduct, updateProduct } from "@/actions/products";
 import { generateSlug } from "@/lib/utils";
 import type { Product } from "@/types";
@@ -52,6 +52,8 @@ export function ProductForm({ product, categories }: ProductFormProps) {
   const [benefitInput, setBenefitInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageTab, setImageTab] = useState<"url" | "file">("url");
+  const [urlInput, setUrlInput] = useState("");
 
   const {
     register,
@@ -80,6 +82,28 @@ export function ProductForm({ product, categories }: ProductFormProps) {
     },
   });
 
+  const handleAddUrl = async () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    try { new URL(url); } catch {
+      toast.error("Please enter a valid URL");
+      return;
+    }
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urls: [url] }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setImages((prev) => [...prev, ...data.urls]);
+      setUrlInput("");
+      toast.success("Image added");
+    } else {
+      toast.error(data.error || "Failed to add image");
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -98,7 +122,7 @@ export function ProductForm({ product, categories }: ProductFormProps) {
         setImages((prev) => [...prev, ...data.urls]);
         toast.success("Images uploaded successfully");
       } else {
-        toast.error("Upload failed");
+        toast.error(data.error || "Upload failed — try URL mode instead");
       }
     } catch {
       toast.error("Upload error");
@@ -389,29 +413,85 @@ export function ProductForm({ product, categories }: ProductFormProps) {
               Product Images
             </h3>
 
-            {/* Upload Area */}
-            <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-6 cursor-pointer hover:border-forest-400 transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              {isUploading ? (
-                <Loader2 className="w-8 h-8 text-forest-400 animate-spin mb-2" />
-              ) : (
-                <Upload className="w-8 h-8 text-gray-300 mb-2" strokeWidth={1.5} />
-              )}
-              <p className="font-body text-sm text-gray-500 text-center">
-                {isUploading
-                  ? "Uploading..."
-                  : "Click to upload images"}
-              </p>
-              <p className="font-body text-xs text-gray-400 mt-1">
-                PNG, JPG up to 10MB
-              </p>
-            </label>
+            {/* Tab switcher */}
+            <div className="flex border border-gray-200 rounded-lg overflow-hidden mb-4">
+              <button
+                type="button"
+                onClick={() => setImageTab("url")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-body font-medium transition-colors ${
+                  imageTab === "url"
+                    ? "bg-forest-500 text-white"
+                    : "bg-white text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                <LinkIcon className="w-3.5 h-3.5" />
+                Paste URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageTab("file")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-body font-medium transition-colors ${
+                  imageTab === "file"
+                    ? "bg-forest-500 text-white"
+                    : "bg-white text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Upload File
+              </button>
+            </div>
+
+            {/* URL input tab */}
+            {imageTab === "url" && (
+              <div className="space-y-2">
+                <p className="font-body text-xs text-gray-400">
+                  Paste any image URL (Unsplash, your CDN, etc.)
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
+                    placeholder="https://images.unsplash.com/..."
+                    className="flex-1 border border-gray-200 px-3 py-2 font-body text-xs text-gray-800 focus:outline-none focus:border-forest-400 rounded bg-gray-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddUrl}
+                    className="bg-forest-500 text-white px-3 py-2 rounded font-body text-xs hover:bg-forest-600 transition-colors whitespace-nowrap"
+                  >
+                    Add
+                  </button>
+                </div>
+                <p className="font-body text-[11px] text-gray-400">
+                  💡 Free images: <a href="https://unsplash.com" target="_blank" className="text-forest-500 hover:underline">unsplash.com</a>
+                  {" · "}right-click image → Copy image address
+                </p>
+              </div>
+            )}
+
+            {/* File upload tab */}
+            {imageTab === "file" && (
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-6 cursor-pointer hover:border-forest-400 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                {isUploading ? (
+                  <Loader2 className="w-8 h-8 text-forest-400 animate-spin mb-2" />
+                ) : (
+                  <Upload className="w-8 h-8 text-gray-300 mb-2" strokeWidth={1.5} />
+                )}
+                <p className="font-body text-sm text-gray-500 text-center">
+                  {isUploading ? "Uploading..." : "Click to upload (requires Cloudinary)"}
+                </p>
+                <p className="font-body text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
+              </label>
+            )}
 
             {/* Image Previews */}
             {images.length > 0 && (
