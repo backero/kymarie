@@ -102,8 +102,8 @@ export function HeroCarousel() {
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
-  const progressRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef    = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const progressRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   // Mouse parallax on the image half
   const rawX = useMotionValue(0);
