@@ -4,6 +4,12 @@ import { getAllProductsAdmin } from "@/actions/products";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { Plus, Edit, Package } from "lucide-react";
 import { DeleteProductButton, ToggleProductButton } from "./ProductActions";
+import {
+  AnimatedProductTableBody,
+  AnimatedProductRow,
+  AnimatedProductsHeader,
+  AnimatedTableCard,
+} from "./ProductsAdminClient";
 
 export default async function AdminProductsPage() {
   const products = await getAllProductsAdmin();
@@ -11,7 +17,7 @@ export default async function AdminProductsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <AnimatedProductsHeader>
         <div>
           <h1 className="font-display text-3xl font-semibold text-neutral-900">
             Products
@@ -22,15 +28,15 @@ export default async function AdminProductsPage() {
         </div>
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 bg-forest-500 hover:bg-forest-600 text-white font-body text-sm font-medium px-4 py-2.5 rounded-xl transition-colors shadow-sm shadow-forest-500/20"
+          className="inline-flex items-center gap-2 bg-forest-500 hover:bg-forest-600 text-white font-body text-sm font-medium px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm shadow-forest-500/20 hover:scale-105 hover:shadow-md hover:shadow-forest-500/20"
         >
           <Plus className="w-4 h-4" />
           Add Product
         </Link>
-      </div>
+      </AnimatedProductsHeader>
 
       {/* Table Card */}
-      <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
+      <AnimatedTableCard>
         {products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center px-6">
             <div className="w-20 h-20 rounded-3xl bg-neutral-100 flex items-center justify-center mb-4">
@@ -67,9 +73,9 @@ export default async function AdminProductsPage() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-50">
+              <AnimatedProductTableBody>
                 {products.map((product) => (
-                  <tr
+                  <AnimatedProductRow
                     key={product.id}
                     className="hover:bg-neutral-50/50 transition-colors group"
                   >
@@ -193,13 +199,13 @@ export default async function AdminProductsPage() {
                         <DeleteProductButton id={product.id} name={product.name} />
                       </div>
                     </td>
-                  </tr>
+                  </AnimatedProductRow>
                 ))}
-              </tbody>
+              </AnimatedProductTableBody>
             </table>
           </div>
         )}
-      </div>
+      </AnimatedTableCard>
     </div>
   );
 }

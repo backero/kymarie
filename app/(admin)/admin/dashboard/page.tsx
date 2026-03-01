@@ -1,55 +1,60 @@
 import { getDashboardStats } from "@/actions/orders";
-import { formatPrice, formatDate, getOrderStatusColor } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ShoppingCart,
   Package,
   TrendingUp,
   Clock,
   ArrowRight,
-  AlertTriangle,
-  Users,
   ChevronRight,
 } from "lucide-react";
+import {
+  AnimatedStatCard,
+  AnimatedOrderRows,
+  AnimatedLowStockItems,
+  AnimatedPanel,
+} from "./DashboardClient";
 
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
 
+  // Icons are pre-rendered as JSX here in the server component.
+  // This avoids passing function references (non-serializable) to client components.
   const statCards = [
     {
       title: "Total Revenue",
-      value: formatPrice(stats.totalRevenue),
-      icon: TrendingUp,
+      rawValue: stats.totalRevenue,
+      isPrice: true,
+      icon: <TrendingUp className="w-5 h-5 text-amber-600" strokeWidth={1.5} />,
       iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
       accent: "from-amber-400/20 to-transparent",
       border: "border-amber-100",
     },
     {
       title: "Total Orders",
-      value: stats.totalOrders.toString(),
-      icon: ShoppingCart,
+      rawValue: stats.totalOrders,
+      isPrice: false,
+      icon: <ShoppingCart className="w-5 h-5 text-blue-600" strokeWidth={1.5} />,
       iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
       accent: "from-blue-400/20 to-transparent",
       border: "border-blue-100",
     },
     {
       title: "Pending Orders",
-      value: stats.pendingOrders.toString(),
-      icon: Clock,
+      rawValue: stats.pendingOrders,
+      isPrice: false,
+      icon: <Clock className="w-5 h-5 text-orange-600" strokeWidth={1.5} />,
       iconBg: "bg-orange-100",
-      iconColor: "text-orange-600",
       accent: "from-orange-400/20 to-transparent",
       border: "border-orange-100",
     },
     {
       title: "Active Products",
-      value: stats.totalProducts.toString(),
-      icon: Package,
+      rawValue: stats.totalProducts,
+      isPrice: false,
+      icon: <Package className="w-5 h-5 text-violet-600" strokeWidth={1.5} />,
       iconBg: "bg-violet-100",
-      iconColor: "text-violet-600",
       accent: "from-violet-400/20 to-transparent",
       border: "border-violet-100",
     },
@@ -82,32 +87,19 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* Stat Cards */}
+      {/* Animated Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {statCards.map(({ title, value, icon: Icon, iconBg, iconColor, accent, border }) => (
-          <div
-            key={title}
-            className={`bg-white rounded-2xl p-5 border ${border} shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden relative`}
-          >
-            {/* Gradient accent */}
-            <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${accent} rounded-bl-3xl`} />
-
-            <div className="relative">
-              <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center mb-4`}>
-                <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.5} />
-              </div>
-              <p className="font-display text-3xl font-bold text-neutral-900 mb-1 leading-none">
-                {value}
-              </p>
-              <p className="font-body text-sm text-neutral-500 mt-1.5">{title}</p>
-            </div>
-          </div>
+        {statCards.map((card, i) => (
+          <AnimatedStatCard key={card.title} {...card} index={i} />
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
+        <AnimatedPanel
+          delay={0.35}
+          className="lg:col-span-2 bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden"
+        >
           <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -134,61 +126,19 @@ export default async function DashboardPage() {
               <p className="font-body text-sm text-neutral-400">No orders yet</p>
             </div>
           ) : (
-            <div className="divide-y divide-neutral-50">
-              {stats.recentOrders.map((order) => {
-                const initials = order.customerName
-                  .split(" ")
-                  .map((n: string) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2);
-                return (
-                  <div
-                    key={order.id}
-                    className="flex items-center gap-4 px-6 py-3.5 hover:bg-neutral-50/60 transition-colors"
-                  >
-                    {/* Customer avatar */}
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-neutral-200 to-neutral-300 flex items-center justify-center flex-shrink-0">
-                      <span className="font-body text-xs font-semibold text-neutral-600">
-                        {initials}
-                      </span>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/admin/orders/${order.id}`}
-                          className="font-body text-sm font-semibold text-neutral-800 hover:text-amber-600 transition-colors"
-                        >
-                          #{order.orderNumber}
-                        </Link>
-                        <span
-                          className={`text-[10px] font-body px-2 py-0.5 rounded-full font-semibold ${getOrderStatusColor(order.status)}`}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
-                      <p className="font-body text-xs text-neutral-400 mt-0.5">
-                        {order.customerName} · {formatDate(order.createdAt)}
-                      </p>
-                    </div>
-
-                    <p className="font-display text-sm font-semibold text-neutral-700 flex-shrink-0">
-                      {formatPrice(order.total)}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
+            <AnimatedOrderRows orders={stats.recentOrders} />
           )}
-        </div>
+        </AnimatedPanel>
 
         {/* Low Stock */}
-        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
+        <AnimatedPanel
+          delay={0.42}
+          className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden"
+        >
           <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4 text-amber-500" strokeWidth={1.5} />
+                <Package className="w-4 h-4 text-amber-500" strokeWidth={1.5} />
               </div>
               <h2 className="font-display text-base font-semibold text-neutral-800">
                 Low Stock
@@ -209,61 +159,7 @@ export default async function DashboardPage() {
               <p className="font-body text-sm text-neutral-400">All products well-stocked</p>
             </div>
           ) : (
-            <div className="divide-y divide-neutral-50">
-              {stats.lowStockProducts.map((product) => {
-                const stockPct = Math.min((product.stock / 20) * 100, 100);
-                const barColor =
-                  product.stock === 0
-                    ? "bg-red-500"
-                    : product.stock <= 5
-                    ? "bg-amber-500"
-                    : "bg-orange-400";
-
-                return (
-                  <Link
-                    key={product.id}
-                    href={`/admin/products/${product.id}/edit`}
-                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-neutral-50 transition-colors group"
-                  >
-                    <div className="relative w-10 h-10 flex-shrink-0 overflow-hidden rounded-xl bg-neutral-100">
-                      {product.thumbnail && (
-                        <Image
-                          src={product.thumbnail}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                          sizes="40px"
-                        />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-body text-sm font-medium text-neutral-700 group-hover:text-amber-600 truncate transition-colors">
-                        {product.name}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <div className="flex-1 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${barColor}`}
-                            style={{ width: `${stockPct}%` }}
-                          />
-                        </div>
-                        <span
-                          className={`font-body text-[10px] font-semibold flex-shrink-0 ${
-                            product.stock === 0
-                              ? "text-red-500"
-                              : product.stock <= 5
-                              ? "text-amber-600"
-                              : "text-orange-500"
-                          }`}
-                        >
-                          {product.stock === 0 ? "Out of stock" : `${product.stock} left`}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            <AnimatedLowStockItems products={stats.lowStockProducts} />
           )}
 
           <div className="px-5 py-3.5 border-t border-neutral-100">
@@ -275,7 +171,7 @@ export default async function DashboardPage() {
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
-        </div>
+        </AnimatedPanel>
       </div>
     </div>
   );

@@ -11,10 +11,15 @@ import {
   Truck,
   RotateCcw,
   Award,
+  Sun,
+  Flower2,
+  Waves,
+  Feather,
 } from "lucide-react";
 import { getFeaturedProducts, getCategories } from "@/actions/products";
 import { ProductCard } from "@/components/public/ProductCard";
 import { TestimonialsCarousel } from "@/components/public/TestimonialsCarousel";
+import { HeroCarousel } from "@/components/public/HeroCarousel";
 import type { Product, Category } from "@/types";
 
 // ─── Marquee Strip ─────────────────────────────────────────────────────────────
@@ -49,136 +54,6 @@ function MarqueeStrip() {
   );
 }
 
-// ─── Hero Section ─────────────────────────────────────────────────────────────
-function HeroSection() {
-  const stats = [
-    { value: "10K+", label: "Happy customers" },
-    { value: "4.9★", label: "Average rating" },
-    { value: "50+", label: "Products" },
-    { value: "100%", label: "Natural" },
-  ];
-
-  return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-cream-100">
-      {/* Decorative gradient blobs */}
-      <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-amber-400/8 rounded-full blur-3xl pointer-events-none translate-x-1/3" />
-      <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-amber-300/8 rounded-full blur-3xl pointer-events-none -translate-x-1/2" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-
-          {/* Left — Text */}
-          <div className="order-2 lg:order-1">
-            {/* Pill badge */}
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 mb-8">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
-              <span className="font-body text-xs tracking-widest uppercase text-amber-700 font-medium">
-                Handcrafted in India
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="font-display text-6xl md:text-7xl lg:text-8xl font-light text-forest-700 leading-[0.88] mb-6">
-              Nature&apos;s
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600">
-                finest
-              </span>
-              <br />
-              on your skin
-            </h1>
-
-            <p className="font-body text-base md:text-lg text-sage-600 leading-relaxed max-w-md mb-10">
-              Each Kumarie bar is hand-poured with pure botanical extracts,
-              cold-pressed oils, and centuries of Ayurvedic wisdom — making
-              every wash a sacred ritual.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-4 mb-14">
-              <Link
-                href="/products"
-                className="group inline-flex items-center gap-3 bg-forest-500 hover:bg-forest-600 text-cream-100 font-body font-medium tracking-widest uppercase text-xs py-4 px-8 transition-all duration-300 rounded-full shadow-lg shadow-forest-500/20 hover:shadow-xl hover:shadow-forest-500/25"
-              >
-                Explore Collection
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/#about"
-                className="inline-flex items-center gap-2 font-body text-xs tracking-widest uppercase text-forest-600 hover:text-amber-600 transition-colors group border border-forest-300 hover:border-amber-400 rounded-full py-4 px-6"
-              >
-                Our Story
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Stats row */}
-            <div className="grid grid-cols-4 gap-4 pt-8 border-t border-cream-300">
-              {stats.map(({ value, label }) => (
-                <div key={label} className="text-center">
-                  <p className="font-display text-2xl md:text-3xl font-semibold text-forest-700 leading-none mb-1">
-                    {value}
-                  </p>
-                  <p className="font-body text-[10px] text-sage-500 tracking-wider uppercase leading-snug">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — Image */}
-          <div className="order-1 lg:order-2 relative">
-            <div className="relative aspect-[3/4] max-w-lg mx-auto">
-              {/* Main image — rounded-3xl */}
-              <div className="relative w-full h-full overflow-hidden rounded-3xl shadow-2xl">
-                <Image
-                  src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=800&q=90"
-                  alt="Kumarie handcrafted soaps with botanicals"
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 90vw, 50vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-              </div>
-
-              {/* Floating review card */}
-              <div className="absolute -bottom-5 -left-5 bg-white rounded-2xl border border-cream-200 p-4 shadow-2xl max-w-[200px]">
-                <div className="flex items-center gap-0.5 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                  ))}
-                </div>
-                <p className="font-display text-sm font-medium text-forest-700 leading-snug">
-                  &ldquo;Absolutely transformative&rdquo;
-                </p>
-                <p className="font-body text-xs text-sage-400 mt-1.5">
-                  — Priya M., Bengaluru
-                </p>
-              </div>
-
-              {/* Gold circle badge */}
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex flex-col items-center justify-center text-white shadow-xl">
-                <span className="font-display text-xl font-semibold leading-none">
-                  100%
-                </span>
-                <span className="font-body text-[9px] tracking-widest uppercase leading-none mt-0.5">
-                  Natural
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-40">
-        <div className="w-px h-10 bg-gradient-to-b from-forest-500 to-transparent animate-bounce" />
-      </div>
-    </section>
-  );
-}
 
 // ─── Features Strip ───────────────────────────────────────────────────────────
 function FeaturesStrip() {
@@ -292,7 +167,10 @@ function CategoryStrip({ categories }: { categories: Category[] }) {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Leaf className="w-10 h-10 text-sage-300" strokeWidth={1} />
+                      <Leaf
+                        className="w-10 h-10 text-sage-300"
+                        strokeWidth={1}
+                      />
                     </div>
                   )}
                 </div>
@@ -326,122 +204,58 @@ function CategoryStrip({ categories }: { categories: Category[] }) {
   );
 }
 
-// ─── Brand Story ──────────────────────────────────────────────────────────────
-function BrandStory() {
-  const stats = [
-    { value: "500+", label: "Bars crafted monthly" },
-    { value: "6 wks", label: "Curing time per bar" },
-    { value: "4.9★", label: "Customer rating" },
-    { value: "2019", label: "Founded" },
-  ];
-
-  return (
-    <section id="about" className="py-20 md:py-28 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Image collage */}
-          <div className="relative grid grid-cols-2 gap-4">
-            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-              <Image
-                src="https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=600"
-                alt="Handcrafting process"
-                fill
-                className="object-cover hover:scale-105 transition-transform duration-700"
-                sizes="(max-width: 1024px) 40vw, 25vw"
-              />
-            </div>
-            <div className="relative aspect-[3/4] overflow-hidden mt-10 rounded-2xl shadow-lg">
-              <Image
-                src="https://images.unsplash.com/photo-1591994843349-f415893b3a6b?w=600"
-                alt="Natural ingredients"
-                fill
-                className="object-cover hover:scale-105 transition-transform duration-700"
-                sizes="(max-width: 1024px) 40vw, 25vw"
-              />
-            </div>
-            {/* Gold quote pill */}
-            <div className="absolute -bottom-5 left-4 right-4 bg-gradient-to-r from-amber-500 to-amber-400 rounded-2xl px-5 py-3.5 text-center shadow-xl">
-              <p className="font-display text-sm italic text-white">
-                &ldquo;Made with love, since 2019&rdquo;
-              </p>
-            </div>
-          </div>
-
-          {/* Text */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px w-10 bg-amber-400" />
-              <span className="font-body text-xs tracking-widest uppercase text-amber-600 font-medium">
-                Our Story
-              </span>
-            </div>
-            <h2 className="font-display text-5xl md:text-6xl font-light text-forest-700 leading-tight mb-6">
-              Born from a grandmother&apos;s
-              <span className="text-amber-500 italic"> recipe</span>
-            </h2>
-            <div className="space-y-4 font-body text-sage-600 leading-relaxed mb-8">
-              <p>
-                Kumarie began in a small kitchen in Kerala, inspired by the
-                handwritten recipe notebook of Founder Ananya&apos;s grandmother —
-                a woman who swore by neem, turmeric, and rose as the ultimate
-                skin trio.
-              </p>
-              <p>
-                Today, every Kumarie bar is still hand-poured in small batches,
-                cured for a full 6 weeks, and wrapped by hand — carrying
-                forward a tradition of care that can&apos;t be rushed.
-              </p>
-              <p className="font-semibold text-forest-700">
-                No shortcuts. No compromises. Just nature, time, and intention.
-              </p>
-            </div>
-
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-3 mb-8">
-              {stats.map(({ value, label }) => (
-                <div
-                  key={label}
-                  className="bg-cream-100 rounded-2xl p-4 border border-cream-200"
-                >
-                  <p className="font-display text-2xl font-semibold text-amber-600 mb-0.5">
-                    {value}
-                  </p>
-                  <p className="font-body text-xs text-sage-500 tracking-wide">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-3 bg-forest-500 hover:bg-forest-600 text-cream-100 font-body font-medium tracking-widest uppercase text-xs py-4 px-8 rounded-full transition-all duration-300 group shadow-lg shadow-forest-500/20"
-            >
-              Explore the collection
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── Ingredients Spotlight ─────────────────────────────────────────────────────
 function IngredientsSection() {
   const ingredients = [
-    { emoji: "🌿", name: "Neem", benefit: "Antibacterial & purifying" },
-    { emoji: "💛", name: "Turmeric", benefit: "Brightening & anti-inflammatory" },
-    { emoji: "🌹", name: "Rose", benefit: "Hydrating & toning" },
-    { emoji: "🫒", name: "Olive Oil", benefit: "Deep moisturising" },
-    { emoji: "🥥", name: "Coconut Oil", benefit: "Rich lather & cleansing" },
-    { emoji: "🌸", name: "Lavender", benefit: "Calming & soothing" },
+    {
+      Icon: Leaf,
+      name: "Neem",
+      latin: "Azadirachta indica",
+      benefit:
+        "Deeply antibacterial. Purifies pores and combats blemishes without stripping skin.",
+    },
+    {
+      Icon: Sun,
+      name: "Turmeric",
+      latin: "Curcuma longa",
+      benefit:
+        "Brightening and anti-inflammatory. Evens tone and imparts a natural luminosity.",
+    },
+    {
+      Icon: Flower2,
+      name: "Rose",
+      latin: "Rosa damascena",
+      benefit:
+        "Hydrating and gently toning. Restores radiance and locks in moisture.",
+    },
+    {
+      Icon: Droplets,
+      name: "Olive Oil",
+      latin: "Olea europaea",
+      benefit:
+        "Deeply nourishing. Leaves skin soft, supple, and visibly conditioned.",
+    },
+    {
+      Icon: Waves,
+      name: "Coconut Oil",
+      latin: "Cocos nucifera",
+      benefit:
+        "Rich lather, gentle cleansing. Effective daily wash that never feels harsh.",
+    },
+    {
+      Icon: Feather,
+      name: "Lavender",
+      latin: "Lavandula angustifolia",
+      benefit:
+        "Calming and soothing. Eases irritation and brings quiet to every wash.",
+    },
   ];
 
   return (
-    <section id="ingredients" className="py-20 md:py-24 bg-forest-500">
+    <section id="ingredients" className="py-20 md:py-28 bg-forest-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
+        {/* Header */}
+        <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-10 bg-amber-500" />
             <span className="font-body text-xs tracking-widest uppercase text-amber-400 font-medium">
@@ -453,19 +267,50 @@ function IngredientsSection() {
             Pure ingredients,{" "}
             <span className="text-amber-400">nothing less</span>
           </h2>
+          <p className="font-body text-sage-400 text-sm mt-4 max-w-md mx-auto leading-relaxed">
+            Every ingredient is chosen for a reason. Nothing filler, nothing
+            synthetic.
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {ingredients.map(({ emoji, name, benefit }) => (
+        {/* Cards — 2 col mobile, 3 col desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+          {ingredients.map(({ Icon, name, latin, benefit }, i) => (
             <div
               key={name}
-              className="group bg-white/8 hover:bg-amber-400/15 rounded-2xl p-5 text-center transition-all duration-300 hover:-translate-y-1 border border-white/10 hover:border-amber-400/40 cursor-default"
+              className="group relative bg-white/[0.06] hover:bg-white/[0.10] rounded-2xl border border-white/10 hover:border-amber-400/35 p-6 md:p-7 transition-all duration-300 hover:-translate-y-1 overflow-hidden cursor-default"
             >
-              <span className="text-4xl mb-3 block">{emoji}</span>
-              <p className="font-body font-semibold text-cream-100 text-sm mb-1">
+              {/* Hover top accent line */}
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+              {/* Decorative index number */}
+              <span className="absolute top-4 right-5 font-display text-6xl font-light text-white/[0.04] select-none leading-none pointer-events-none">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+
+              {/* Icon chip */}
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/20 flex items-center justify-center mb-5 group-hover:bg-amber-500/22 transition-colors duration-300">
+                <Icon
+                  className="w-4.5 h-4.5 text-amber-400"
+                  strokeWidth={1.5}
+                />
+              </div>
+
+              {/* Ingredient name */}
+              <p className="font-display text-lg md:text-xl font-light text-cream-100 leading-tight mb-1">
                 {name}
               </p>
-              <p className="font-body text-xs text-cream-400 leading-relaxed">
+
+              {/* Latin name */}
+              <p className="font-body text-[11px] text-amber-400/60 italic tracking-wide mb-4">
+                {latin}
+              </p>
+
+              {/* Divider */}
+              <div className="h-px w-8 bg-amber-500/25 mb-4" />
+
+              {/* Benefit */}
+              <p className="font-body text-xs text-cream-400/80 leading-relaxed">
                 {benefit}
               </p>
             </div>
@@ -491,7 +336,10 @@ function TrustBar() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {items.map(({ icon: Icon, label }) => (
             <div key={label} className="flex items-center gap-3 justify-center">
-              <Icon className="w-5 h-5 text-amber-500 flex-shrink-0" strokeWidth={1.5} />
+              <Icon
+                className="w-5 h-5 text-amber-500 flex-shrink-0"
+                strokeWidth={1.5}
+              />
               <span className="font-body text-xs text-sage-600 font-medium tracking-wide">
                 {label}
               </span>
@@ -556,7 +404,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection />
+      <HeroCarousel />
       <MarqueeStrip />
       <FeaturesStrip />
 
@@ -600,7 +448,6 @@ export default async function HomePage() {
       </section>
 
       <CategoryStrip categories={categories as Category[]} />
-      <BrandStory />
       <IngredientsSection />
       <TestimonialsCarousel />
       <TrustBar />

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ShoppingBag, Heart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -46,9 +47,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
   };
 
   return (
-    <article
+    <motion.article
+      whileHover={{ y: -6 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "group relative flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1.5 border border-cream-200",
+        "group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-cream-200",
+        "shadow-sm hover:shadow-2xl transition-shadow duration-500",
         className
       )}
     >
@@ -71,14 +75,24 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {/* Pill Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {product.isNew && (
-            <span className="bg-forest-500 text-cream-100 text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+              className="bg-forest-500 text-cream-100 text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm"
+            >
               New
-            </span>
+            </motion.span>
           )}
           {discount > 0 && (
-            <span className="bg-amber-500 text-white text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="bg-amber-500 text-white text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm"
+            >
               -{discount}%
-            </span>
+            </motion.span>
           )}
           {product.stock === 0 && (
             <span className="bg-sage-500 text-cream-100 text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
@@ -87,25 +101,40 @@ export function ProductCard({ product, className }: ProductCardProps) {
           )}
         </div>
 
-        {/* Wishlist button — appears on hover */}
-        <button
+        {/* Wishlist button — appears on hover with spring */}
+        <motion.button
           onClick={handleWishlist}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white"
+          initial={{ opacity: 0, scale: 0.6 }}
+          whileInView={{ opacity: 0 }}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.88 }}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart
-            className={cn(
-              "w-4 h-4 transition-colors duration-200",
-              isWishlisted ? "text-red-500 fill-red-500" : "text-sage-500"
-            )}
-          />
-        </button>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isWishlisted ? "filled" : "empty"}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            >
+              <Heart
+                className={cn(
+                  "w-4 h-4 transition-colors duration-200",
+                  isWishlisted ? "text-red-500 fill-red-500" : "text-sage-500"
+                )}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </motion.button>
 
         {/* Quick Add — slides up on hover */}
         <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-350 ease-out">
-          <button
+          <motion.button
             onClick={handleAddToCart}
             disabled={product.stock === 0}
+            whileTap={product.stock > 0 ? { scale: 0.97 } : undefined}
             className={cn(
               "w-full flex items-center justify-center gap-2.5 py-3.5 font-body text-xs font-semibold tracking-widest uppercase transition-all duration-200",
               product.stock === 0
@@ -115,7 +144,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             {product.stock === 0 ? "Out of Stock" : "Quick Add"}
-          </button>
+          </motion.button>
         </div>
       </Link>
 
@@ -161,14 +190,23 @@ export function ProductCard({ product, className }: ProductCardProps) {
           )}
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
-// Skeleton loader
-export function ProductCardSkeleton() {
+// Skeleton loader with stagger-aware animation
+export function ProductCardSkeleton({ index = 0 }: { index?: number }) {
   return (
-    <div className="flex flex-col bg-white rounded-2xl overflow-hidden border border-cream-200">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.4,
+        delay: index * 0.07,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className="flex flex-col bg-white rounded-2xl overflow-hidden border border-cream-200"
+    >
       <div className="aspect-[4/5] skeleton" />
       <div className="p-4 space-y-2.5">
         <div className="h-3 w-16 skeleton rounded-full" />
@@ -176,6 +214,6 @@ export function ProductCardSkeleton() {
         <div className="h-3 w-4/5 skeleton rounded-full" />
         <div className="h-5 w-24 skeleton rounded-full mt-2" />
       </div>
-    </div>
+    </motion.div>
   );
 }

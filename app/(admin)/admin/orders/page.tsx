@@ -8,6 +8,12 @@ import {
 import Link from "next/link";
 import { ShoppingCart, Eye } from "lucide-react";
 import { OrderStatusUpdater } from "./OrderStatusUpdater";
+import {
+  AnimatedTableBody,
+  AnimatedTableRow,
+  AnimatedFilterPills,
+  AnimatedPageHeader,
+} from "./OrdersClient";
 
 const ORDER_STATUSES = [
   "All",
@@ -38,17 +44,17 @@ export default async function AdminOrdersPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <AnimatedPageHeader>
         <h1 className="font-display text-3xl font-semibold text-neutral-900">
           Orders
         </h1>
         <p className="font-body text-sm text-neutral-500 mt-1">
           {total} orders total
         </p>
-      </div>
+      </AnimatedPageHeader>
 
       {/* Status Filter Pills */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <AnimatedFilterPills>
         {ORDER_STATUSES.map((s) => {
           const isSelected =
             params.status === s || (!params.status && s === "All");
@@ -66,7 +72,7 @@ export default async function AdminOrdersPage({
             </a>
           );
         })}
-      </div>
+      </AnimatedFilterPills>
 
       {/* Orders Table */}
       <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
@@ -106,7 +112,7 @@ export default async function AdminOrdersPage({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-50">
+              <AnimatedTableBody>
                 {orders.map((order) => {
                   const initials = order.customerName
                     .split(" ")
@@ -116,7 +122,7 @@ export default async function AdminOrdersPage({
                     .slice(0, 2);
 
                   return (
-                    <tr
+                    <AnimatedTableRow
                       key={order.id}
                       className="hover:bg-neutral-50/50 transition-colors group"
                     >
@@ -198,10 +204,10 @@ export default async function AdminOrdersPage({
                           <Eye className="w-4 h-4" strokeWidth={1.5} />
                         </Link>
                       </td>
-                    </tr>
+                    </AnimatedTableRow>
                   );
                 })}
-              </tbody>
+              </AnimatedTableBody>
             </table>
           </div>
         )}
@@ -217,7 +223,7 @@ export default async function AdminOrdersPage({
                 ...(params.status && { status: params.status }),
                 page: p.toString(),
               })}`}
-              className={`w-9 h-9 flex items-center justify-center font-body text-sm rounded-xl transition-all duration-200 ${
+              className={`w-9 h-9 flex items-center justify-center font-body text-sm rounded-xl transition-all duration-200 hover:scale-110 ${
                 p === page
                   ? "bg-forest-500 text-white shadow-sm shadow-forest-500/20"
                   : "bg-white border border-neutral-200 text-neutral-500 hover:border-amber-300 hover:text-amber-600"

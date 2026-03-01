@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/public/Navbar";
 import { Footer } from "@/components/public/Footer";
+import { PageTransition } from "@/components/animations";
 
 export default function PublicLayout({
   children,
@@ -9,7 +10,9 @@ export default function PublicLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <PageTransition>
+        <main className="flex-1">{children}</main>
+      </PageTransition>
       <Footer />
     </div>
   );

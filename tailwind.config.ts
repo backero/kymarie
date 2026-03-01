@@ -116,8 +116,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["Cormorant Garamond", "Georgia", "serif"],
-        heading: ["Playfair Display", "Georgia", "serif"],
+        display: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
         body: ["Jost", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },

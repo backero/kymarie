@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { getProductBySlug, getProducts } from "@/actions/products";
 import { ProductDetailClient } from "./ProductDetailClient";
+import { ProductImageGallery } from "./ProductImageGallery";
 import { ProductCard } from "@/components/public/ProductCard";
 import type { Product } from "@/types";
 import { Leaf, Star, Shield, Truck, RefreshCw } from "lucide-react";
@@ -45,43 +45,11 @@ export default async function ProductPage({ params }: Props) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           {/* Images */}
-          <div className="space-y-4">
-            {/* Main Image */}
-            <div className="relative aspect-square overflow-hidden bg-cream-200">
-              <Image
-                src={product.images[0] || "/placeholder.jpg"}
-                alt={product.name}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 1024px) 90vw, 50vw"
-              />
-              {product.isNew && (
-                <div className="absolute top-4 left-4 bg-forest-500 text-cream-100 text-xs font-body font-medium tracking-wider uppercase px-3 py-1">
-                  New
-                </div>
-              )}
-            </div>
-            {/* Thumbnail Grid */}
-            {product.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-3">
-                {product.images.map((img, i) => (
-                  <div
-                    key={i}
-                    className="relative aspect-square overflow-hidden bg-cream-200 border-2 border-transparent hover:border-amber-400 cursor-pointer transition-colors"
-                  >
-                    <Image
-                      src={img}
-                      alt={`${product.name} - image ${i + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="100px"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ProductImageGallery
+            images={product.images}
+            productName={product.name}
+            isNew={product.isNew}
+          />
 
           {/* Product Info */}
           <div>

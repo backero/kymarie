@@ -7,17 +7,18 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice } from "@/lib/utils";
 import { createOrder } from "@/actions/orders";
+import { FadeUp, SlideReveal } from "@/components/animations";
 import type { RazorpayOptions, RazorpayResponse } from "@/types";
 import toast from "react-hot-toast";
 
 const SHIPPING_THRESHOLD = 599;
 const SHIPPING_FEE = 60;
 
-// Demo mode: true when no real Razorpay key is configured
 const DEMO_MODE =
   !process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
   process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID.startsWith("rzp_test_xxx");
@@ -47,6 +48,50 @@ const indianStates = [
   "Ladakh", "Lakshadweep", "Puducherry",
 ];
 
+/** Reusable animated form field */
+function FormField({
+  label,
+  error,
+  required,
+  className,
+  children,
+  delay = 0,
+}: {
+  label: string;
+  error?: string;
+  required?: boolean;
+  className?: string;
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
+        {label} {required && <span className="text-amber-500">*</span>}
+      </label>
+      {children}
+      <AnimatePresence>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, y: -4, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -4, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-red-500 text-xs mt-1 font-body overflow-hidden"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, clearCart, getSubtotal } = useCart();
@@ -59,10 +104,12 @@ export default function CheckoutPage() {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
   });
+
+  const inputClass =
+    "w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/10 bg-cream-50 placeholder-sage-300 transition-all duration-200";
 
   const placeOrder = async (formData: CheckoutForm) => {
     const orderResult = await createOrder({
@@ -94,7 +141,6 @@ export default function CheckoutPage() {
     try {
       const order = await placeOrder(formData);
 
-      // ── DEMO MODE: skip Razorpay ──────────────────────────────────
       if (DEMO_MODE) {
         const res = await fetch("/api/payment/demo", {
           method: "POST",
@@ -112,7 +158,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      // ── REAL MODE: Razorpay ───────────────────────────────────────
       const razorpayRes = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -186,34 +231,72 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-cream-100 pt-20 flex items-center justify-center">
-        <div className="text-center py-16">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="text-center py-16"
+        >
           <h2 className="font-display text-3xl text-forest-600 mb-3">
             Your cart is empty
           </h2>
           <Link href="/products" className="btn-primary">
             Browse Products
           </Link>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-cream-100 pt-20">
-      <div className="bg-white border-b border-cream-300 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/cart"
-            className="inline-flex items-center gap-2 font-body text-sm text-sage-500 hover:text-forest-600 transition-colors mb-4"
+      {/* Payment processing overlay */}
+      <AnimatePresence>
+        {isProcessing && (
+          <motion.div
+            key="processing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-5"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to cart
-          </Link>
-          <h1 className="font-display text-4xl font-light text-forest-700">
-            Checkout
-          </h1>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+            >
+              <Loader2 className="w-10 h-10 text-amber-500" />
+            </motion.div>
+            <div className="text-center">
+              <p className="font-display text-2xl text-forest-700 mb-1">
+                Processing your order
+              </p>
+              <p className="font-body text-sm text-sage-500">
+                Please wait, do not close this tab...
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <FadeUp>
+        <div className="bg-white border-b border-cream-300 py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div whileHover={{ x: -3 }} transition={{ duration: 0.2 }}>
+              <Link
+                href="/cart"
+                className="inline-flex items-center gap-2 font-body text-sm text-sage-500 hover:text-forest-600 transition-colors mb-4"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to cart
+              </Link>
+            </motion.div>
+            <h1 className="font-display text-4xl font-light text-forest-700">
+              Checkout
+            </h1>
+          </div>
         </div>
-      </div>
+      </FadeUp>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -221,137 +304,87 @@ export default function CheckoutPage() {
             {/* Shipping Form */}
             <div className="lg:col-span-2 space-y-8">
               {/* Contact */}
-              <div className="bg-white border border-cream-300 p-6 md:p-8">
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-white border border-cream-300 p-6 md:p-8"
+              >
                 <h2 className="font-display text-xl font-medium text-forest-700 mb-6 pb-4 border-b border-cream-300">
                   Contact Information
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="md:col-span-2">
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      Full Name *
-                    </label>
+                  <FormField label="Full Name" error={errors.customerName?.message} required className="md:col-span-2" delay={0.15}>
                     <input
                       {...register("customerName")}
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50 placeholder-sage-300"
+                      className={inputClass}
                       placeholder="Ananya Kumar"
                     />
-                    {errors.customerName && (
-                      <p className="text-red-500 text-xs mt-1 font-body">
-                        {errors.customerName.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      Email *
-                    </label>
+                  </FormField>
+                  <FormField label="Email" error={errors.customerEmail?.message} required delay={0.2}>
                     <input
                       {...register("customerEmail")}
                       type="email"
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50 placeholder-sage-300"
+                      className={inputClass}
                       placeholder="ananya@example.com"
                     />
-                    {errors.customerEmail && (
-                      <p className="text-red-500 text-xs mt-1 font-body">
-                        {errors.customerEmail.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      Mobile Number *
-                    </label>
+                  </FormField>
+                  <FormField label="Mobile Number" error={errors.customerPhone?.message} required delay={0.25}>
                     <input
                       {...register("customerPhone")}
                       type="tel"
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50 placeholder-sage-300"
+                      className={inputClass}
                       placeholder="9876543210"
                       maxLength={10}
                     />
-                    {errors.customerPhone && (
-                      <p className="text-red-500 text-xs mt-1 font-body">
-                        {errors.customerPhone.message}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Shipping Address */}
-              <div className="bg-white border border-cream-300 p-6 md:p-8">
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-white border border-cream-300 p-6 md:p-8"
+              >
                 <h2 className="font-display text-xl font-medium text-forest-700 mb-6 pb-4 border-b border-cream-300">
                   Shipping Address
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="md:col-span-2">
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      Address Line 1 *
-                    </label>
+                  <FormField label="Address Line 1" error={errors.addressLine1?.message} required className="md:col-span-2" delay={0.25}>
                     <input
                       {...register("addressLine1")}
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50 placeholder-sage-300"
+                      className={inputClass}
                       placeholder="House/Flat no., Street, Area"
                     />
-                    {errors.addressLine1 && (
-                      <p className="text-red-500 text-xs mt-1 font-body">
-                        {errors.addressLine1.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      Address Line 2
-                    </label>
+                  </FormField>
+                  <FormField label="Address Line 2" className="md:col-span-2" delay={0.3}>
                     <input
                       {...register("addressLine2")}
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50 placeholder-sage-300"
+                      className={inputClass}
                       placeholder="Landmark, Colony (optional)"
                     />
-                  </div>
-
-                  <div>
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      City *
-                    </label>
+                  </FormField>
+                  <FormField label="City" error={errors.city?.message} required delay={0.32}>
                     <input
                       {...register("city")}
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50 placeholder-sage-300"
+                      className={inputClass}
                       placeholder="Bengaluru"
                     />
-                    {errors.city && (
-                      <p className="text-red-500 text-xs mt-1 font-body">
-                        {errors.city.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      Pincode *
-                    </label>
+                  </FormField>
+                  <FormField label="Pincode" error={errors.pincode?.message} required delay={0.34}>
                     <input
                       {...register("pincode")}
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50 placeholder-sage-300"
+                      className={inputClass}
                       placeholder="560001"
                       maxLength={6}
                     />
-                    {errors.pincode && (
-                      <p className="text-red-500 text-xs mt-1 font-body">
-                        {errors.pincode.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-600 block mb-2">
-                      State *
-                    </label>
+                  </FormField>
+                  <FormField label="State" error={errors.state?.message} required className="md:col-span-2" delay={0.36}>
                     <select
                       {...register("state")}
-                      className="w-full border border-cream-300 px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 bg-cream-50"
+                      className={inputClass}
                     >
                       <option value="">Select state</option>
                       {indianStates.map((state) => (
@@ -360,18 +393,13 @@ export default function CheckoutPage() {
                         </option>
                       ))}
                     </select>
-                    {errors.state && (
-                      <p className="text-red-500 text-xs mt-1 font-body">
-                        {errors.state.message}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* Order Summary */}
-            <div className="lg:col-span-1">
+            <SlideReveal direction="right" delay={0.18} className="lg:col-span-1">
               <div className="bg-white border border-cream-300 p-6 sticky top-24">
                 <h2 className="font-display text-xl font-medium text-forest-700 mb-5 pb-4 border-b border-cream-300">
                   Order Summary
@@ -379,8 +407,14 @@ export default function CheckoutPage() {
 
                 {/* Items */}
                 <ul className="space-y-4 mb-5">
-                  {items.map((item) => (
-                    <li key={item.id} className="flex gap-3">
+                  {items.map((item, i) => (
+                    <motion.li
+                      key={item.id}
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 + i * 0.05 }}
+                      className="flex gap-3"
+                    >
                       <div className="relative w-14 h-14 flex-shrink-0 overflow-hidden bg-cream-200">
                         <Image
                           src={item.image}
@@ -401,7 +435,7 @@ export default function CheckoutPage() {
                           {formatPrice(item.price * item.quantity)}
                         </p>
                       </div>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
 
@@ -434,18 +468,41 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <button
+                {/* Pay button */}
+                <motion.button
                   type="submit"
                   disabled={isProcessing}
+                  whileHover={isProcessing ? {} : { scale: 1.02 }}
+                  whileTap={isProcessing ? {} : { scale: 0.97 }}
+                  transition={{ duration: 0.14 }}
                   className="w-full flex items-center justify-center gap-3 bg-forest-500 hover:bg-forest-600 disabled:bg-sage-300 text-cream-100 font-body font-medium tracking-widest uppercase text-xs py-4 transition-colors duration-300"
                 >
-                  <Lock className="w-4 h-4" />
-                  {isProcessing
-                    ? "Processing..."
-                    : DEMO_MODE
-                    ? "Demo Pay (Simulate)"
-                    : "Pay Now"}
-                </button>
+                  <AnimatePresence mode="wait">
+                    {isProcessing ? (
+                      <motion.span
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-2"
+                      >
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Processing...
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="pay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-2"
+                      >
+                        <Lock className="w-4 h-4" />
+                        {DEMO_MODE ? "Demo Pay (Simulate)" : "Pay Now"}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
 
                 {DEMO_MODE && (
                   <p className="font-body text-[11px] text-amber-600 text-center bg-amber-50 border border-amber-200 px-3 py-2 mt-2">
@@ -460,7 +517,7 @@ export default function CheckoutPage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </SlideReveal>
           </div>
         </form>
       </div>
