@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ShoppingBag, Heart } from "lucide-react";
+import { ShoppingBag, Heart, Leaf } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
@@ -61,13 +61,24 @@ export function ProductCard({ product, className }: ProductCardProps) {
         href={`/products/${product.slug}`}
         className="relative aspect-[4/5] overflow-hidden bg-cream-100 block"
       >
-        <Image
-          src={product.thumbnail || product.images[0] || "/placeholder.jpg"}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        />
+        {product.thumbnail || product.images?.[0] ? (
+          <Image
+            src={product.thumbnail || product.images[0]}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-cream-100 gap-3">
+            <div className="w-14 h-14 rounded-full bg-cream-200 flex items-center justify-center">
+              <Leaf className="w-6 h-6 text-sage-300" strokeWidth={1.5} />
+            </div>
+            <span className="font-body text-[10px] tracking-widest uppercase text-sage-300">
+              Photo coming soon
+            </span>
+          </div>
+        )}
 
         {/* Pill Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
