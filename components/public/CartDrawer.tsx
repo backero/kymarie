@@ -60,9 +60,9 @@ export function CartDrawer() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-cream-200 bg-white">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-forest-500 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-cream-200 border border-cream-300 flex items-center justify-center">
                   <ShoppingBag
-                    className="w-4 h-4 text-cream-100"
+                    className="w-4 h-4 text-sage-500"
                     strokeWidth={1.5}
                   />
                 </div>
@@ -109,17 +109,17 @@ export function CartDrawer() {
                   transition={{ duration: 0.25 }}
                   className="overflow-hidden"
                 >
-                  <div className="px-6 py-3 bg-amber-50 border-b border-amber-100">
+                  <div className="px-6 py-3 bg-cream-100 border-b border-cream-300">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-body text-xs text-amber-700 font-medium">
+                      <span className="font-body text-xs text-sage-600 font-medium">
                         Add {formatPrice(remainingForFreeShipping)} more for
                         free shipping
                       </span>
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <Sparkles className="w-3.5 h-3.5 text-sage-400" />
                     </div>
-                    <div className="w-full h-1.5 bg-amber-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1 bg-cream-300 rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full"
+                        className="h-full bg-forest-500 rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: `${progressPct}%` }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -137,15 +137,9 @@ export function CartDrawer() {
                   transition={{ duration: 0.25 }}
                   className="overflow-hidden"
                 >
-                  <div className="px-6 py-2.5 bg-forest-500/10 border-b border-forest-500/10 flex items-center gap-2">
-                    <motion.div
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: [0, 20, -20, 0] }}
-                      transition={{ duration: 0.5, delay: 0.1 }}
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                    </motion.div>
-                    <span className="font-body text-xs text-forest-600 font-medium">
+                  <div className="px-6 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="font-body text-xs text-amber-700 font-medium">
                       You qualify for free shipping!
                     </span>
                   </div>
@@ -184,7 +178,7 @@ export function CartDrawer() {
                     <Link
                       href="/products"
                       onClick={closeCart}
-                      className="inline-flex items-center gap-2 bg-forest-500 hover:bg-forest-600 text-cream-100 font-body font-medium tracking-widest uppercase text-xs py-3.5 px-6 rounded-full transition-all duration-300 group mt-2"
+                      className="inline-flex items-center gap-2 bg-forest-500 hover:bg-forest-400 text-white font-body font-medium tracking-widest uppercase text-xs py-3.5 px-6 rounded-full transition-all duration-200 group mt-2"
                     >
                       Explore Products
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -339,7 +333,7 @@ export function CartDrawer() {
                     <Link
                       href="/checkout"
                       onClick={closeCart}
-                      className="flex items-center justify-center gap-2 w-full bg-forest-500 hover:bg-forest-600 text-cream-100 font-body font-medium tracking-widest uppercase text-xs py-4 rounded-full transition-all duration-300 group shadow-lg shadow-forest-500/20"
+                      className="flex items-center justify-center gap-2 w-full bg-forest-500 hover:bg-forest-400 text-white font-body font-medium tracking-widest uppercase text-xs py-4 rounded-full transition-all duration-200 group"
                     >
                       Proceed to Checkout
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -349,7 +343,7 @@ export function CartDrawer() {
                   <Link
                     href="/products"
                     onClick={closeCart}
-                    className="block text-center font-body text-xs text-sage-400 hover:text-amber-600 transition-colors tracking-wide"
+                    className="block text-center font-body text-xs text-sage-400 hover:text-forest-500 transition-colors tracking-wide"
                   >
                     Continue Shopping
                   </Link>

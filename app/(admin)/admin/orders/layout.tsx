@@ -43,7 +43,7 @@ export default async function AdminOrdersLayout({
                 <p className="font-body text-sm font-medium text-neutral-800 leading-none">{admin.name}</p>
                 <p className="font-body text-[11px] text-neutral-400 mt-0.5">Administrator</p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-forest-500 flex items-center justify-center shadow-sm">
                 <span className="font-body text-xs font-bold text-white">{initials}</span>
               </div>
               <div className="relative -ml-3 -mt-3">

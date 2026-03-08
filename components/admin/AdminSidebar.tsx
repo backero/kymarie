@@ -67,17 +67,17 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-forest-700 min-h-screen flex flex-col">
+    <aside className="w-64 flex-shrink-0 bg-white border-r border-cream-300 min-h-screen flex flex-col">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-white/8">
+      <div className="flex items-center gap-3 px-5 py-5 border-b border-cream-300">
         <Image
           src="/logo.png"
           alt="Kumarie"
           width={100}
           height={40}
-          className="h-8 w-auto object-contain brightness-0 invert"
+          className="h-8 w-auto object-contain"
         />
-        <span className="font-body text-[9px] tracking-widest uppercase text-amber-400 font-semibold mt-0.5 border border-amber-400/40 rounded px-1.5 py-0.5">
+        <span className="font-body text-[9px] tracking-widest uppercase text-amber-500 font-semibold mt-0.5 border border-amber-200 rounded px-1.5 py-0.5">
           Admin
         </span>
       </div>
@@ -86,7 +86,7 @@ export function AdminSidebar() {
       <nav className="flex-1 px-3 py-5 space-y-5 overflow-y-auto scrollbar-hide">
         {navSections.map((section) => (
           <div key={section.label}>
-            <p className="font-body text-[10px] font-semibold tracking-widest uppercase text-white/25 px-3 mb-2">
+            <p className="font-body text-[10px] font-semibold tracking-widest uppercase text-sage-300 px-3 mb-2">
               {section.label}
             </p>
             <div className="space-y-0.5">
@@ -104,18 +104,18 @@ export function AdminSidebar() {
                       className={cn(
                         "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body transition-all duration-200 relative",
                         isActive
-                          ? "bg-white/12 text-white font-medium"
-                          : "text-white/50 hover:bg-white/6 hover:text-white/80"
+                          ? "bg-amber-50 text-forest-600 font-medium"
+                          : "text-sage-500 hover:bg-cream-100 hover:text-forest-600"
                       )}
                     >
                       {/* Active left bar */}
                       {isActive && (
-                        <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-amber-400 rounded-r-full" />
+                        <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-amber-500 rounded-r-full" />
                       )}
                       <Icon
                         className={cn(
                           "w-4 h-4 flex-shrink-0 transition-colors",
-                          isActive ? "text-amber-400" : "text-white/40 group-hover:text-white/70"
+                          isActive ? "text-amber-500" : "text-sage-400 group-hover:text-sage-600"
                         )}
                         strokeWidth={1.5}
                       />
@@ -123,8 +123,8 @@ export function AdminSidebar() {
                       {"children" in item && item.children && (
                         <ChevronRight
                           className={cn(
-                            "w-3.5 h-3.5 transition-transform text-white/30",
-                            isActive && "rotate-90 text-white/60"
+                            "w-3.5 h-3.5 transition-transform text-sage-300",
+                            isActive && "rotate-90 text-sage-500"
                           )}
                         />
                       )}
@@ -140,14 +140,14 @@ export function AdminSidebar() {
                             className={cn(
                               "flex items-center gap-2 px-3 py-1.5 text-xs font-body transition-colors rounded-lg",
                               pathname === child.href
-                                ? "text-amber-400 font-medium"
-                                : "text-white/40 hover:text-white/70"
+                                ? "text-amber-600 font-medium"
+                                : "text-sage-400 hover:text-forest-600"
                             )}
                           >
                             <span
                               className={cn(
                                 "w-1 h-1 rounded-full flex-shrink-0",
-                                pathname === child.href ? "bg-amber-400" : "bg-white/30"
+                                pathname === child.href ? "bg-amber-500" : "bg-sage-300"
                               )}
                             />
                             {child.label}
@@ -164,18 +164,18 @@ export function AdminSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t border-white/8 space-y-1">
+      <div className="px-3 py-4 border-t border-cream-300 space-y-1">
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-3 w-full px-3 py-2 text-xs font-body text-white/40 hover:text-white/70 hover:bg-white/6 rounded-xl transition-all duration-200"
+          className="flex items-center gap-3 w-full px-3 py-2 text-xs font-body text-sage-400 hover:text-forest-600 hover:bg-cream-100 rounded-xl transition-all duration-200"
         >
           <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.5} />
           View Store
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2 text-xs font-body text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all duration-200"
+          className="flex items-center gap-3 w-full px-3 py-2 text-xs font-body text-sage-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.5} />
           Sign Out

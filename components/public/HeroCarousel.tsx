@@ -102,8 +102,12 @@ export function HeroCarousel() {
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
-  const timerRef    = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-  const progressRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined,
+  );
+  const progressRef = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined,
+  );
 
   // Mouse parallax on the image half
   const rawX = useMotionValue(0);
@@ -192,29 +196,8 @@ export function HeroCarousel() {
         setPaused(false);
       }}
     >
-      {/* Ambient gradient blobs */}
-      <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-amber-400/8 rounded-full blur-3xl pointer-events-none translate-x-1/3" />
-      <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-amber-300/8 rounded-full blur-3xl pointer-events-none -translate-x-1/2" />
-
-      {/* Floating botanical particles */}
-      {PARTICLES.map(({ x, y, size, delay }, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full bg-amber-400/30 pointer-events-none"
-          style={{ left: x, top: y, width: size, height: size }}
-          animate={{
-            y: [0, -26, 0],
-            opacity: [0.2, 0.55, 0.2],
-            scale: [1, 1.4, 1],
-          }}
-          transition={{
-            duration: 4 + delay,
-            repeat: Infinity,
-            delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+      {/* Subtle background gradient — top-right only */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-50/60 rounded-full blur-3xl pointer-events-none translate-x-1/3 -translate-y-1/4" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -230,8 +213,8 @@ export function HeroCarousel() {
               >
                 {/* Pulsing badge */}
                 <motion.div variants={textChildV}>
-                  <span className="inline-flex items-center gap-2 font-body text-xs tracking-widest uppercase text-amber-600 font-medium bg-amber-50 border border-amber-200/80 px-4 py-1.5 rounded-full mb-7 select-none w-fit">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-2 font-body text-xs tracking-widest uppercase text-sage-500 font-medium mb-7 select-none w-fit">
+                    <span className="w-4 h-px bg-sage-300" />
                     {slide.badge}
                   </span>
                 </motion.div>
@@ -239,14 +222,14 @@ export function HeroCarousel() {
                 {/* Headline */}
                 <motion.h1
                   variants={textChildV}
-                  className="font-display text-6xl md:text-7xl lg:text-8xl font-light text-forest-700 leading-[0.9]"
+                  className="font-display text-6xl md:text-7xl lg:text-8xl font-light text-forest-500 leading-[0.92] tracking-tight"
                 >
                   {slide.headline}
                 </motion.h1>
 
-                {/* Gold accent line */}
+                {/* Accent line */}
                 <motion.div variants={textChildV} className="mb-6">
-                  <span className="font-display text-6xl md:text-7xl lg:text-8xl font-light leading-[0.9] text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600">
+                  <span className="font-display text-6xl md:text-7xl lg:text-8xl font-light leading-[0.92] tracking-tight text-amber-500">
                     {slide.accent}
                   </span>
                 </motion.div>
@@ -263,7 +246,7 @@ export function HeroCarousel() {
                 <motion.div variants={textChildV} className="mb-14">
                   <Link
                     href={slide.cta.href}
-                    className="group inline-flex items-center gap-3 bg-forest-500 hover:bg-forest-600 text-cream-100 font-body font-medium tracking-widest uppercase text-xs py-4 px-8 transition-all duration-300 rounded-full shadow-lg shadow-forest-500/20 hover:shadow-xl hover:shadow-forest-500/30"
+                    className="group inline-flex items-center gap-3 bg-forest-500 hover:bg-forest-400 text-white font-body font-medium tracking-widest uppercase text-xs py-4 px-8 transition-all duration-200 rounded-full"
                   >
                     {slide.cta.label}
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -273,13 +256,16 @@ export function HeroCarousel() {
             </AnimatePresence>
 
             {/* Stats row — always visible */}
-            <div className="grid grid-cols-4 gap-4 pt-8 border-t border-cream-300">
-              {STATS.map(({ value, label }) => (
-                <div key={label} className="text-center">
-                  <p className="font-display text-2xl md:text-3xl font-semibold text-forest-700 leading-none mb-1">
+            <div className="flex items-center gap-0 pt-8 border-t border-cream-300">
+              {STATS.map(({ value, label }, i) => (
+                <div
+                  key={label}
+                  className={`flex-1 text-center ${i > 0 ? "border-l border-cream-300" : ""}`}
+                >
+                  <p className="font-display text-xl md:text-2xl font-medium text-forest-500 leading-none mb-1">
                     {value}
                   </p>
-                  <p className="font-body text-[10px] text-sage-500 tracking-wider uppercase leading-snug">
+                  <p className="font-body text-[10px] text-sage-400 tracking-wider uppercase leading-snug">
                     {label}
                   </p>
                 </div>
@@ -289,25 +275,6 @@ export function HeroCarousel() {
 
           {/* ── RIGHT: Image carousel ────────────────────────────────────────── */}
           <div className="order-1 lg:order-2 relative">
-            {/* Animated slide counter */}
-            <div className="absolute -top-8 right-0 flex items-baseline gap-1.5 z-10">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={current}
-                  initial={{ y: 14, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -14, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="font-display text-4xl font-light text-forest-700 leading-none tabular-nums"
-                >
-                  {String(current + 1).padStart(2, "0")}
-                </motion.span>
-              </AnimatePresence>
-              <span className="font-body text-sm text-sage-400">
-                / {String(SLIDES.length).padStart(2, "0")}
-              </span>
-            </div>
-
             {/* Image frame */}
             <div className="relative aspect-[3/4] max-w-lg mx-auto">
               <div className="relative w-full h-full overflow-hidden rounded-3xl shadow-2xl">
@@ -352,23 +319,15 @@ export function HeroCarousel() {
                 </AnimatePresence>
               </div>
 
-              {/* Gold badge — gentle pulse */}
-              <motion.div
-                className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex flex-col items-center justify-center text-white shadow-xl z-10"
-                animate={{ scale: [1, 1.07, 1] }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <span className="font-display text-xl font-semibold leading-none">
+              {/* Clean badge */}
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-white border border-cream-300 rounded-full flex flex-col items-center justify-center shadow-sm z-10">
+                <span className="font-display text-xl font-semibold text-forest-500 leading-none">
                   100%
                 </span>
-                <span className="font-body text-[9px] tracking-widest uppercase leading-none mt-0.5">
+                <span className="font-body text-[9px] tracking-widest uppercase text-sage-400 leading-none mt-0.5">
                   Natural
                 </span>
-              </motion.div>
+              </div>
             </div>
 
             {/* Nav: prev / dots / next */}
@@ -376,12 +335,12 @@ export function HeroCarousel() {
               <button
                 onClick={prev}
                 aria-label="Previous slide"
-                className="w-11 h-11 rounded-full border border-cream-300 hover:border-amber-400 bg-white hover:bg-amber-50 flex items-center justify-center transition-all duration-200 shadow-sm group"
+                className="w-10 h-10 rounded-full border border-cream-300 hover:border-forest-300 bg-white hover:bg-cream-100 flex items-center justify-center transition-all duration-200 group"
               >
-                <ChevronLeft className="w-4 h-4 text-sage-600 group-hover:text-amber-600 transition-colors" />
+                <ChevronLeft className="w-4 h-4 text-sage-400 group-hover:text-forest-500 transition-colors" />
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {SLIDES.map((_, i) => (
                   <button
                     key={i}
@@ -389,8 +348,8 @@ export function HeroCarousel() {
                     aria-label={`Go to slide ${i + 1}`}
                     className={`rounded-full transition-all duration-300 ${
                       i === current
-                        ? "w-8 h-2.5 bg-amber-500"
-                        : "w-2.5 h-2.5 bg-cream-300 hover:bg-amber-300"
+                        ? "w-6 h-2 bg-forest-500"
+                        : "w-2 h-2 bg-cream-300 hover:bg-sage-300"
                     }`}
                   />
                 ))}
@@ -399,9 +358,9 @@ export function HeroCarousel() {
               <button
                 onClick={next}
                 aria-label="Next slide"
-                className="w-11 h-11 rounded-full border border-cream-300 hover:border-amber-400 bg-white hover:bg-amber-50 flex items-center justify-center transition-all duration-200 shadow-sm group"
+                className="w-10 h-10 rounded-full border border-cream-300 hover:border-forest-300 bg-white hover:bg-cream-100 flex items-center justify-center transition-all duration-200 group"
               >
-                <ChevronRight className="w-4 h-4 text-sage-600 group-hover:text-amber-600 transition-colors" />
+                <ChevronRight className="w-4 h-4 text-sage-400 group-hover:text-forest-500 transition-colors" />
               </button>
             </div>
           </div>
@@ -409,16 +368,11 @@ export function HeroCarousel() {
       </div>
 
       {/* Auto-play progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-cream-300 overflow-hidden">
+      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-cream-300 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-amber-400 to-amber-600"
+          className="h-full bg-forest-400"
           style={{ width: `${progress}%`, transition: "width 50ms linear" }}
         />
-      </div>
-
-      {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-30 pointer-events-none">
-        <div className="w-px h-10 bg-gradient-to-b from-forest-500 to-transparent animate-bounce" />
       </div>
     </section>
   );

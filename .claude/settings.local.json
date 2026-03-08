@@ -16,7 +16,8 @@
       "Bash(cd /d/Developer/Backero/kumarie && npx ts-node --esm --experimental-specifier-resolution=node prisma/seed.ts 2>&1 || npx tsx prisma/seed.ts 2>&1)",
       "Bash(node:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx next:*)"
     ]
   }
 }

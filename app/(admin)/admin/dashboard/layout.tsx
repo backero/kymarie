@@ -57,7 +57,7 @@ export default async function AdminDashboardLayout({
                   Administrator
                 </p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-forest-500 flex items-center justify-center shadow-sm">
                 <span className="font-body text-xs font-bold text-white">
                   {initials}
                 </span>

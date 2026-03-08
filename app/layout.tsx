@@ -79,24 +79,24 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="grain-overlay antialiased">
+      <body className="antialiased">
         {children}
         <Toaster
           position="bottom-right"
           toastOptions={{
             className: "font-body text-sm",
             style: {
-              background: "#FFFDF7",
-              color: "#111111",
-              border: "1px solid #E8D8A0",
-              borderRadius: "4px",
+              background: "#FFFFFF",
+              color: "#1A1A18",
+              border: "1px solid #E8E8E6",
+              borderRadius: "10px",
               boxShadow:
-                "0 10px 40px rgba(0,0,0,0.08), 0 2px 10px rgba(0,0,0,0.04)",
+                "0 8px 30px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)",
             },
             success: {
               iconTheme: {
-                primary: "#C8A020",
-                secondary: "#FFFDF7",
+                primary: "#3D6B5C",
+                secondary: "#FFFFFF",
               },
             },
           }}

@@ -48,11 +48,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
   return (
     <motion.article
-      whileHover={{ y: -6 }}
-      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-cream-200",
-        "shadow-sm hover:shadow-2xl transition-shadow duration-500",
+        "group relative flex flex-col bg-white rounded-xl overflow-hidden border border-cream-300",
+        "hover:border-cream-400 hover:shadow-md transition-all duration-300",
         className
       )}
     >
@@ -69,9 +69,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
 
-        {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
         {/* Pill Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {product.isNew && (
@@ -79,7 +76,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.15 }}
-              className="bg-forest-500 text-cream-100 text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm"
+              className="bg-forest-500 text-white text-[10px] font-body font-medium tracking-wider uppercase px-2.5 py-1 rounded-full"
             >
               New
             </motion.span>
@@ -89,7 +86,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="bg-amber-500 text-white text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm"
+              className="bg-amber-500 text-white text-[10px] font-body font-medium tracking-wider uppercase px-2.5 py-1 rounded-full"
             >
               -{discount}%
             </motion.span>
@@ -108,7 +105,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           whileInView={{ opacity: 0 }}
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.88 }}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-cream-300 flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           <AnimatePresence mode="wait">
@@ -138,8 +135,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
             className={cn(
               "w-full flex items-center justify-center gap-2.5 py-3.5 font-body text-xs font-semibold tracking-widest uppercase transition-all duration-200",
               product.stock === 0
-                ? "bg-sage-400/90 text-white cursor-not-allowed backdrop-blur-sm"
-                : "bg-forest-500/95 hover:bg-amber-600 text-cream-100 backdrop-blur-sm"
+                ? "bg-sage-400 text-white cursor-not-allowed"
+                : "bg-forest-500 hover:bg-forest-400 text-white"
             )}
           >
             <ShoppingBag className="w-3.5 h-3.5" />
@@ -151,14 +148,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
       {/* Card Content */}
       <div className="flex-1 flex flex-col p-4">
         {/* Category pill */}
-        <span className="font-body text-[10px] text-amber-600 tracking-widest uppercase font-semibold mb-2.5">
+        <span className="font-body text-[10px] text-sage-400 tracking-widest uppercase mb-2.5">
           {product.category.name}
         </span>
 
         {/* Product name */}
         <Link
           href={`/products/${product.slug}`}
-          className="font-display text-[15px] font-medium text-forest-700 hover:text-amber-600 transition-colors duration-200 leading-snug mb-2 line-clamp-2"
+          className="font-display text-[15px] font-medium text-forest-500 hover:text-amber-500 transition-colors duration-200 leading-snug mb-2 line-clamp-2"
         >
           {product.name}
         </Link>
@@ -184,7 +181,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           </div>
 
           {product.stock > 0 && product.stock <= 10 && (
-            <span className="font-body text-[10px] text-amber-600 font-medium bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+            <span className="font-body text-[10px] text-sage-500 font-medium bg-cream-200 border border-cream-300 px-2 py-0.5 rounded-full whitespace-nowrap">
               {product.stock} left
             </span>
           )}
@@ -205,7 +202,7 @@ export function ProductCardSkeleton({ index = 0 }: { index?: number }) {
         delay: index * 0.07,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="flex flex-col bg-white rounded-2xl overflow-hidden border border-cream-200"
+      className="flex flex-col bg-white rounded-xl overflow-hidden border border-cream-300"
     >
       <div className="aspect-[4/5] skeleton" />
       <div className="p-4 space-y-2.5">
