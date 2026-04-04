@@ -1,39 +1,14 @@
 "use server";
 
-import { validateAdmin, createToken, setAuthCookie, clearAuthCookie } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-
-const LoginSchema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(1, "Password is required"),
-});
-
-// ── Admin Login ───────────────────────────────────────────────────────────────
-export async function adminLogin(data: z.infer<typeof LoginSchema>) {
-  const validated = LoginSchema.parse(data);
-
-  const admin = await validateAdmin(validated.email, validated.password);
-
-  if (!admin) {
-    return { success: false, error: "Invalid email or password" };
-  }
-
-  const token = createToken(admin);
-  await setAuthCookie(token);
-
-  return { success: true };
-}
-
-// ── Admin Logout ──────────────────────────────────────────────────────────────
-export async function adminLogout() {
-  await clearAuthCookie();
-  redirect("/admin/login");
-}
 
 // ── Subscribe to Newsletter ───────────────────────────────────────────────────
 export async function subscribeNewsletter(email: string) {
-  const { prisma } = await import("@/lib/prisma");
+  const parsed = z.string().email().safeParse(email);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid email address" };
+  }
 
   try {
     const existing = await prisma.newsletter.findUnique({ where: { email } });

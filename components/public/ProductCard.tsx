@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { ShoppingBag, Heart, Leaf } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/hooks/useCart";
+import { toggleWishlist } from "@/actions/wishlist";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
@@ -14,11 +16,14 @@ import toast from "react-hot-toast";
 interface ProductCardProps {
   product: Product;
   className?: string;
+  initialWishlisted?: boolean;
 }
 
-export function ProductCard({ product, className }: ProductCardProps) {
+export function ProductCard({ product, className, initialWishlisted = false }: ProductCardProps) {
   const { addItem } = useCart();
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { data: session } = useSession();
+  const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const discount = product.comparePrice
     ? calculateDiscount(product.price, product.comparePrice)
@@ -39,11 +44,27 @@ export function ProductCard({ product, className }: ProductCardProps) {
     toast.success(`${product.name} added to cart`);
   };
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted((w) => !w);
-    toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
+
+    if (!session || session.user?.role !== "user") {
+      toast.error("Sign in to save products to your wishlist");
+      return;
+    }
+
+    if (wishlistLoading) return;
+    setWishlistLoading(true);
+
+    try {
+      const result = await toggleWishlist(session.user.id, product.id);
+      setIsWishlisted(result.added);
+      toast.success(result.added ? "Added to wishlist" : "Removed from wishlist");
+    } catch {
+      toast.error("Failed to update wishlist");
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   return (
@@ -109,11 +130,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
           )}
         </div>
 
-        {/* Wishlist button — appears on hover with spring */}
+        {/* Wishlist button — appears on hover */}
         <motion.button
           onClick={handleWishlist}
-          initial={{ opacity: 0, scale: 0.6 }}
-          whileInView={{ opacity: 0 }}
+          disabled={wishlistLoading}
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.88 }}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-cream-300 flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"

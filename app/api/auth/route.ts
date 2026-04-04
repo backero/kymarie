@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
-import { getAdminFromCookie } from "@/lib/auth";
+import { auth } from "@/auth";
 
-// GET /api/auth - Check auth status
+// GET /api/auth - Check auth status (admin)
 export async function GET() {
-  const admin = await getAdminFromCookie();
+  const session = await auth();
 
-  if (!admin) {
+  if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
   return NextResponse.json({
     authenticated: true,
     admin: {
-      id: admin.id,
-      email: admin.email,
-      name: admin.name,
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
     },
   });
 }

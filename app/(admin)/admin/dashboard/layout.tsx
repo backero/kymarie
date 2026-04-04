@@ -1,4 +1,4 @@
-import { getAdminFromCookie } from "@/lib/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Bell, Search } from "lucide-react";
@@ -8,10 +8,11 @@ export default async function AdminDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await getAdminFromCookie();
-  if (!admin) redirect("/admin/login");
+  const session = await auth();
+  if (!session || session.user?.role !== "admin") redirect("/admin/login");
 
-  const initials = admin.name
+  const name = session.user.name ?? "Admin";
+  const initials = name
     .split(" ")
     .map((n: string) => n[0])
     .join("")
@@ -39,19 +40,14 @@ export default async function AdminDashboardLayout({
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            {/* Notification bell */}
             <button className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 transition-colors text-neutral-500 relative">
               <Bell className="w-4 h-4" strokeWidth={1.5} />
             </button>
-
-            {/* Divider */}
             <div className="w-px h-6 bg-neutral-200" />
-
-            {/* Admin info */}
             <div className="flex items-center gap-2.5">
               <div className="flex flex-col text-right">
                 <p className="font-body text-sm font-medium text-neutral-800 leading-none">
-                  {admin.name}
+                  {name}
                 </p>
                 <p className="font-body text-[11px] text-neutral-400 mt-0.5">
                   Administrator
@@ -62,7 +58,6 @@ export default async function AdminDashboardLayout({
                   {initials}
                 </span>
               </div>
-              {/* Online indicator */}
               <div className="relative -ml-3 -mt-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white block" />
               </div>

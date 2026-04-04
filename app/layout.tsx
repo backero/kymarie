@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -54,21 +56,15 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  // icons: {
-  //   icon: [
-  //     { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-  //     { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-  //   ],
-  //   shortcut: "/favicon-32x32.png",
-  //   apple: "/apple-touch-icon.png",
-  // },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -80,27 +76,29 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        {children}
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            className: "font-body text-sm",
-            style: {
-              background: "#FFFFFF",
-              color: "#1A1A18",
-              border: "1px solid #E8E8E6",
-              borderRadius: "10px",
-              boxShadow:
-                "0 8px 30px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)",
-            },
-            success: {
-              iconTheme: {
-                primary: "#3D6B5C",
-                secondary: "#FFFFFF",
+        <SessionProvider session={session}>
+          {children}
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              className: "font-body text-sm",
+              style: {
+                background: "#FFFFFF",
+                color: "#1A1A18",
+                border: "1px solid #E8E8E6",
+                borderRadius: "10px",
+                boxShadow:
+                  "0 8px 30px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)",
               },
-            },
-          }}
-        />
+              success: {
+                iconTheme: {
+                  primary: "#3D6B5C",
+                  secondary: "#FFFFFF",
+                },
+              },
+            }}
+          />
+        </SessionProvider>
       </body>
     </html>
   );

@@ -27,7 +27,7 @@ export function verifyToken(token: string): AdminPayload | null {
   }
 }
 
-// ── Get admin from cookie ───────────────────────────────────────────────────
+// ── Get admin from cookie (legacy — kept for upload route) ─────────────────
 export async function getAdminFromCookie(): Promise<AdminPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
@@ -35,7 +35,7 @@ export async function getAdminFromCookie(): Promise<AdminPayload | null> {
   return verifyToken(token);
 }
 
-// ── Set auth cookie ─────────────────────────────────────────────────────────
+// ── Set auth cookie (legacy) ─────────────────────────────────────────────
 export async function setAuthCookie(token: string) {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
@@ -47,7 +47,7 @@ export async function setAuthCookie(token: string) {
   });
 }
 
-// ── Clear auth cookie ────────────────────────────────────────────────────────
+// ── Clear auth cookie (legacy) ────────────────────────────────────────────
 export async function clearAuthCookie() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
@@ -72,11 +72,19 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
 
-// ── Require admin (throws if not authenticated) ──────────────────────────
+// ── Require admin via NextAuth session ───────────────────────────────────────
+// Used by server actions that need admin auth (orders, products, upload)
 export async function requireAdmin(): Promise<AdminPayload> {
-  const admin = await getAdminFromCookie();
-  if (!admin) {
+  const { auth } = await import("@/auth");
+  const session = await auth();
+
+  if (!session || session.user?.role !== "admin") {
     throw new Error("Unauthorized");
   }
-  return admin;
+
+  return {
+    id: session.user.id,
+    email: session.user.email ?? "",
+    name: session.user.name ?? "",
+  };
 }

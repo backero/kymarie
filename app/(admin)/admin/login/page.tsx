@@ -8,7 +8,7 @@ import { z } from "zod";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, Loader2, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { adminLogin } from "@/actions/admin";
+import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 
 const loginSchema = z.object({
@@ -34,13 +34,19 @@ export default function AdminLoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      const result = await adminLogin(data);
-      if (result.success) {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        role: "admin",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error("Invalid email or password");
+      } else {
         toast.success("Welcome back!");
         router.push("/admin/dashboard");
         router.refresh();
-      } else {
-        toast.error(result.error || "Login failed");
       }
     } catch {
       toast.error("Something went wrong");
@@ -53,7 +59,6 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-cream-100 flex">
       {/* ── Left panel (decorative) — hidden on small screens ── */}
       <div className="hidden lg:flex lg:w-[45%] bg-forest-500 flex-col justify-between p-12 relative overflow-hidden">
-        {/* Subtle texture */}
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -61,8 +66,6 @@ export default function AdminLoginPage() {
             backgroundSize: "32px 32px",
           }}
         />
-
-        {/* Logo */}
         <div className="relative">
           <Image
             src="/logo.png"
@@ -73,8 +76,6 @@ export default function AdminLoginPage() {
             priority
           />
         </div>
-
-        {/* Center text */}
         <div className="relative space-y-4">
           <p className="font-body text-[10px] tracking-[0.2em] uppercase text-white/50">
             Admin Portal
@@ -86,14 +87,12 @@ export default function AdminLoginPage() {
             Products, orders, and analytics — all in one clean dashboard.
           </p>
         </div>
-
-        {/* Bottom badge */}
         <div className="relative flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
             <Lock className="w-3.5 h-3.5 text-white/60" strokeWidth={1.5} />
           </div>
           <p className="font-body text-xs text-white/40">
-            Secured with encrypted authentication
+            Secured with NextAuth session management
           </p>
         </div>
       </div>
@@ -106,7 +105,6 @@ export default function AdminLoginPage() {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="w-full max-w-sm"
         >
-          {/* Logo (mobile only) */}
           <div className="lg:hidden mb-10 text-center">
             <Image
               src="/logo.png"
@@ -118,7 +116,6 @@ export default function AdminLoginPage() {
             />
           </div>
 
-          {/* Heading */}
           <div className="mb-8">
             <h1 className="font-display text-2xl font-medium text-forest-700 mb-1">
               Welcome back
@@ -128,9 +125,7 @@ export default function AdminLoginPage() {
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
             <div>
               <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-500 block mb-2">
                 Email Address
@@ -156,7 +151,6 @@ export default function AdminLoginPage() {
               </AnimatePresence>
             </div>
 
-            {/* Password */}
             <div>
               <label className="font-body text-xs font-medium tracking-wider uppercase text-sage-500 block mb-2">
                 Password
@@ -213,7 +207,6 @@ export default function AdminLoginPage() {
               </AnimatePresence>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
@@ -247,7 +240,6 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Footer */}
           <div className="mt-8 pt-6 border-t border-cream-300 flex items-center justify-between">
             <a
               href="/"

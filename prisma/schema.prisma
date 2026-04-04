@@ -22,6 +22,25 @@ model Admin {
 }
 
 // ========================================
+// USER
+// ========================================
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders        Order[]
+  wishlistItems WishlistItem[]
+  addresses     Address[]
+
+  @@map("users")
+}
+
+// ========================================
 // PRODUCT
 // ========================================
 model Product {
@@ -63,8 +82,9 @@ model Product {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  orderItems   OrderItem[]
-  reviews      Review[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
 
   @@map("products")
 }
@@ -92,7 +112,11 @@ model Order {
   orderNumber   String      @unique
   status        OrderStatus @default(PENDING)
 
-  // Customer Info
+  // Optional link to registered user
+  user          User?       @relation(fields: [userId], references: [id])
+  userId        String?
+
+  // Customer Info (always stored for guest/user orders)
   customerName  String
   customerEmail String
   customerPhone String
@@ -141,6 +165,44 @@ model OrderItem {
   totalPrice  Float
 
   @@map("order_items")
+}
+
+// ========================================
+// ADDRESS
+// ========================================
+model Address {
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  label        String   @default("Home") // Home, Work, Other
+  name         String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  pincode      String
+  country      String   @default("India")
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("addresses")
+}
+
+// ========================================
+// WISHLIST
+// ========================================
+model WishlistItem {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
 }
 
 // ========================================

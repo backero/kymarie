@@ -20,7 +20,11 @@
       "Bash(npx next:*)",
       "Bash(python:*)",
       "Bash(pip install:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(del \"D:\\\\Development\\\\Internal\\\\kumarie\\\\middleware.ts\")",
+      "Bash(npx ts-node:*)"
     ]
   }
 }

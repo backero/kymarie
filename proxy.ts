@@ -1,36 +1,37 @@
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-const ADMIN_PATHS = [
-  "/admin/dashboard",
-  "/admin/products",
-  "/admin/orders",
-  "/admin/settings",
-  "/admin/categories",
-];
-
-export function proxy(request: NextRequest) {
+// Next.js 16 uses proxy.ts instead of middleware.ts.
+// NextAuth v5's auth() wraps the proxy and injects request.auth with the session.
+export const proxy = auth((request) => {
   const { pathname } = request.nextUrl;
+  const session = request.auth;
 
-  // Check if the path is an admin route (but not the login page)
-  const isAdminRoute =
-    ADMIN_PATHS.some((path) => pathname.startsWith(path)) &&
-    !pathname.startsWith("/admin/login");
+  // Protect admin routes (except login)
+  if (
+    pathname.startsWith("/admin") &&
+    !pathname.startsWith("/admin/login")
+  ) {
+    if (!session || session.user?.role !== "admin") {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+  }
 
-  if (isAdminRoute) {
-    const token = request.cookies.get("kumarie_admin_token")?.value;
-
-    if (!token) {
-      const loginUrl = new URL("/admin/login", request.url);
-      loginUrl.searchParams.set("from", pathname);
+  // Protect profile routes — require user session
+  if (pathname.startsWith("/profile")) {
+    if (!session) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
-
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/admin/((?!login$).*)",
+    "/profile(.*)",
+  ],
 };

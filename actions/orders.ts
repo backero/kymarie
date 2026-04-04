@@ -18,6 +18,7 @@ const CheckoutSchema = z.object({
   pincode: z.string().length(6),
   country: z.string().default("India"),
   notes: z.string().optional(),
+  userId: z.string().optional(), // link order to logged-in user
   items: z.array(
     z.object({
       productId: z.string(),
@@ -70,6 +71,7 @@ export async function createOrder(data: z.infer<typeof CheckoutSchema>) {
       pincode: validated.pincode,
       country: validated.country,
       notes: validated.notes ?? null,
+      userId: validated.userId ?? null,
       subtotal: validated.subtotal,
       shippingFee: validated.shippingFee,
       discount: validated.discount,

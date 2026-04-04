@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import {
   LayoutDashboard,
@@ -13,7 +13,7 @@ import {
   Tag,
   ExternalLink,
 } from "lucide-react";
-import { adminLogout } from "@/actions/admin";
+import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -55,14 +55,9 @@ const navSections = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const handleLogout = async () => {
-    try {
-      await adminLogout();
-    } catch {
-      router.push("/admin/login");
-    }
+    await signOut({ callbackUrl: "/admin/login" });
     toast.success("Logged out successfully");
   };
 
@@ -108,7 +103,6 @@ export function AdminSidebar() {
                           : "text-sage-500 hover:bg-cream-100 hover:text-forest-600"
                       )}
                     >
-                      {/* Active left bar */}
                       {isActive && (
                         <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-amber-500 rounded-r-full" />
                       )}
@@ -130,7 +124,6 @@ export function AdminSidebar() {
                       )}
                     </Link>
 
-                    {/* Sub-items */}
                     {"children" in item && item.children && isActive && (
                       <div className="ml-10 mt-0.5 space-y-0.5">
                         {item.children.map((child) => (

@@ -1,4 +1,4 @@
-import { getAdminFromCookie } from "@/lib/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Bell, Search } from "lucide-react";
@@ -8,10 +8,11 @@ export default async function AdminProductsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await getAdminFromCookie();
-  if (!admin) redirect("/admin/login");
+  const session = await auth();
+  if (!session || session.user?.role !== "admin") redirect("/admin/login");
 
-  const initials = admin.name
+  const name = session.user.name ?? "Admin";
+  const initials = name
     .split(" ")
     .map((n: string) => n[0])
     .join("")
@@ -40,7 +41,7 @@ export default async function AdminProductsLayout({
             <div className="w-px h-6 bg-neutral-200" />
             <div className="flex items-center gap-2.5">
               <div className="flex flex-col text-right">
-                <p className="font-body text-sm font-medium text-neutral-800 leading-none">{admin.name}</p>
+                <p className="font-body text-sm font-medium text-neutral-800 leading-none">{name}</p>
                 <p className="font-body text-[11px] text-neutral-400 mt-0.5">Administrator</p>
               </div>
               <div className="w-9 h-9 rounded-xl bg-forest-500 flex items-center justify-center shadow-sm">

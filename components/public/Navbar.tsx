@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ShoppingBag, Search, Menu, X } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, User, LogOut, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useSession, signOut } from "next-auth/react";
 import { useCart } from "@/hooks/useCart";
 import { useSearch } from "@/hooks/useSearch";
 import { CartDrawer } from "./CartDrawer";
@@ -21,10 +22,14 @@ export function Navbar() {
   const [scrolled,        setScrolled]        = useState(false);
   const [mobileMenuOpen,  setMobileMenuOpen]  = useState(false);
   const [mounted,         setMounted]         = useState(false);
+  const [userMenuOpen,    setUserMenuOpen]    = useState(false);
 
+  const { data: session } = useSession();
   const { getItemCount, openCart } = useCart();
   const { openMobile }             = useSearch();
   const count = mounted ? getItemCount() : 0;
+
+  const isLoggedIn = mounted && session?.user?.role === "user";
 
   useEffect(() => {
     setMounted(true);
@@ -32,6 +37,28 @@ export function Navbar() {
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-user-menu]")) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [userMenuOpen]);
+
+  const nameInitials = session?.user?.name
+    ? session.user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "U";
 
   return (
     <>
@@ -83,6 +110,94 @@ export function Navbar() {
               >
                 <Search className="w-[18px] h-[18px]" strokeWidth={1.75} />
               </button>
+
+              {/* User account */}
+              {mounted && (
+                isLoggedIn ? (
+                  <div className="relative" data-user-menu>
+                    <button
+                      onClick={() => setUserMenuOpen((v) => !v)}
+                      className="flex items-center gap-1.5 ml-0.5 h-9 px-2 rounded-lg text-sage-400 hover:text-forest-600 hover:bg-cream-100 transition-all duration-150"
+                      aria-label="Account menu"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-forest-500 flex items-center justify-center flex-shrink-0">
+                        <span className="font-body text-[9px] font-bold text-white leading-none">
+                          {nameInitials}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={cn(
+                          "w-3 h-3 transition-transform duration-200",
+                          userMenuOpen && "rotate-180"
+                        )}
+                        strokeWidth={2}
+                      />
+                    </button>
+
+                    <AnimatePresence>
+                      {userMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                          className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-cream-300 shadow-lg overflow-hidden z-50"
+                        >
+                          {/* User info */}
+                          <div className="px-4 py-3 border-b border-cream-200">
+                            <p className="font-body text-sm font-medium text-forest-700 truncate">
+                              {session?.user?.name}
+                            </p>
+                            <p className="font-body text-xs text-sage-400 truncate">
+                              {session?.user?.email}
+                            </p>
+                          </div>
+                          {/* Links */}
+                          <div className="py-1.5">
+                            <Link
+                              href="/profile"
+                              onClick={() => setUserMenuOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2.5 font-body text-sm text-sage-600 hover:text-forest-600 hover:bg-cream-50 transition-colors"
+                            >
+                              <User className="w-3.5 h-3.5" strokeWidth={1.5} />
+                              My Account
+                            </Link>
+                            <Link
+                              href="/profile?tab=orders"
+                              onClick={() => setUserMenuOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2.5 font-body text-sm text-sage-600 hover:text-forest-600 hover:bg-cream-50 transition-colors"
+                            >
+                              <ShoppingBag className="w-3.5 h-3.5" strokeWidth={1.5} />
+                              My Orders
+                            </Link>
+                          </div>
+                          {/* Logout */}
+                          <div className="border-t border-cream-200 py-1.5">
+                            <button
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                signOut({ callbackUrl: "/" });
+                              }}
+                              className="flex items-center gap-2.5 w-full px-4 py-2.5 font-body text-sm text-sage-500 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            >
+                              <LogOut className="w-3.5 h-3.5" strokeWidth={1.5} />
+                              Sign Out
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="hidden sm:flex items-center gap-1.5 ml-0.5 h-9 px-3 rounded-lg text-sage-400 hover:text-forest-600 hover:bg-cream-100 transition-all duration-150 font-body text-xs"
+                  >
+                    <User className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                    <span className="hidden lg:inline">Sign In</span>
+                  </Link>
+                )
+              )}
 
               {/* Cart */}
               <button
@@ -157,6 +272,42 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
+
+                {/* Auth links for mobile */}
+                {mounted && (
+                  isLoggedIn ? (
+                    <>
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="font-body text-sm text-sage-600 hover:text-forest-600 py-2.5 border-b border-cream-200 transition-colors flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" strokeWidth={1.5} />
+                        My Account
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          signOut({ callbackUrl: "/" });
+                        }}
+                        className="font-body text-sm text-sage-500 hover:text-red-500 py-2.5 border-b border-cream-200 transition-colors flex items-center gap-2 text-left"
+                      >
+                        <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-body text-sm text-sage-600 hover:text-forest-600 py-2.5 border-b border-cream-200 transition-colors flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4" strokeWidth={1.5} />
+                      Sign In / Register
+                    </Link>
+                  )
+                )}
+
                 <Link
                   href="/products"
                   onClick={() => setMobileMenuOpen(false)}
