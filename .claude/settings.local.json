@@ -24,7 +24,13 @@
       "Bash(npm install:*)",
       "Bash(npx prisma:*)",
       "Bash(del \"D:\\\\Development\\\\Internal\\\\kumarie\\\\middleware.ts\")",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_xoDu6yR1Vfkg@ep-muddy-dream-ae3lx54x-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts)",
+      "WebFetch(domain:unsplash.com)",
+      "Bash(mkdir -p /tmp/soap_check)",
+      "Read(//tmp/**)",
+      "WebSearch",
+      "WebFetch(domain:lumier.framer.website)"
     ]
   }
 }
