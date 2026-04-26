@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, ShoppingBag, Minus, Plus, Trash2, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +14,7 @@ const SHIPPING_FEE = 60;
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getSubtotal } = useCart();
+  const [confirmClear, setConfirmClear] = useState(false);
   const subtotal = getSubtotal();
   const shippingFee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + shippingFee;
@@ -208,16 +210,47 @@ export default function CartPage() {
                   ))}
                 </AnimatePresence>
 
-                {/* Clear cart */}
-                <div className="flex justify-end">
-                  <motion.button
-                    onClick={clearCart}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="font-body text-xs text-sage-400 hover:text-red-500 transition-colors tracking-wide"
-                  >
-                    Clear all items
-                  </motion.button>
+                {/* Clear cart with confirmation */}
+                <div className="flex justify-end items-center gap-3">
+                  <AnimatePresence mode="wait">
+                    {confirmClear ? (
+                      <motion.div
+                        key="confirm"
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 8 }}
+                        transition={{ duration: 0.18 }}
+                        className="flex items-center gap-2"
+                      >
+                        <span className="font-body text-xs text-sage-500">Remove all items?</span>
+                        <button
+                          onClick={() => { clearCart(); setConfirmClear(false); }}
+                          className="font-body text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
+                        >
+                          Yes, clear
+                        </button>
+                        <button
+                          onClick={() => setConfirmClear(false)}
+                          className="font-body text-xs text-sage-400 hover:text-forest-500 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </motion.div>
+                    ) : (
+                      <motion.button
+                        key="trigger"
+                        onClick={() => setConfirmClear(true)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="font-body text-xs text-sage-400 hover:text-red-500 transition-colors tracking-wide"
+                      >
+                        Clear all items
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 

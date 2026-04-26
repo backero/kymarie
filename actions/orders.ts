@@ -95,6 +95,29 @@ export async function createOrder(data: z.infer<typeof CheckoutSchema>) {
   return { success: true, order };
 }
 
+// ── Confirm COD Order ────────────────────────────────────────────────────────
+export async function confirmCODOrder(orderId: string) {
+  const order = await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      status: "CONFIRMED",
+      paymentStatus: "PENDING",
+      paymentMethod: "COD",
+    },
+    include: { items: true },
+  });
+
+  for (const item of order.items) {
+    await prisma.product.update({
+      where: { id: item.productId },
+      data: { stock: { decrement: item.quantity } },
+    });
+  }
+
+  revalidatePath("/admin/orders");
+  return { success: true, order };
+}
+
 // ── Confirm Payment & Update Order ───────────────────────────────────────────
 export async function confirmPayment(
   orderId: string,

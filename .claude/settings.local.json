@@ -30,7 +30,12 @@
       "Bash(mkdir -p /tmp/soap_check)",
       "Read(//tmp/**)",
       "WebSearch",
-      "WebFetch(domain:lumier.framer.website)"
+      "WebFetch(domain:lumier.framer.website)",
+      "Bash(pg_isready -h localhost -p 5432)",
+      "Bash(git checkout *)",
+      "Bash(taskkill /F /IM node.exe)",
+      "PowerShell(Stop-Process *)",
+      "Bash(grep -E \"\\\\.tsx$\")"
     ]
   }
 }

@@ -15,9 +15,9 @@ import { getFeaturedProducts } from "@/actions/products";
 import { CinematicHero } from "@/components/public/CinematicHero";
 import { BrandStory, HorizontalProductScroll } from "@/components/public/BrandStory";
 import { BeforeAfterSection } from "@/components/public/BeforeAfterSection";
+import { WhatsAppSection } from "@/components/public/WhatsAppSection";
 import { ScrollReveal } from "@/components/public/ScrollReveal";
 import { WordReveal } from "@/components/animations/WordReveal";
-import { MagneticButton } from "@/components/animations/MagneticButton";
 import type { Product } from "@/types";
 
 // ─── Marquee Strip ─────────────────────────────────────────────────────────────
@@ -35,8 +35,8 @@ function MarqueeStrip() {
   const doubled = [...items, ...items];
 
   return (
-    <div className="bg-cream-200 overflow-hidden py-3 border-y border-cream-300">
-      <div className="flex animate-marquee whitespace-nowrap">
+    <div className="group bg-cream-200 overflow-hidden py-3 border-y border-cream-300">
+      <div className="flex animate-marquee whitespace-nowrap group-hover:[animation-play-state:paused]">
         {doubled.map((item, i) => (
           <span
             key={i}
@@ -201,50 +201,6 @@ function IngredientsSection() {
   );
 }
 
-// ─── Newsletter ────────────────────────────────────────────────────────────────
-function Newsletter() {
-  return (
-    <section className="bg-cream-200 py-20 md:py-28 border-t border-cream-300">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <ScrollReveal>
-          <p className="font-body text-xs tracking-widest uppercase text-sage-400 mb-4">
-            Stay in the loop
-          </p>
-          <WordReveal
-            text="Join the ritual"
-            as="h2"
-            className="font-display text-3xl md:text-4xl lg:text-5xl font-light text-forest-500 tracking-tight mb-4"
-            delay={0.05}
-          />
-          <p className="font-body text-sage-500 mb-10 leading-relaxed max-w-md mx-auto">
-            New arrivals, skincare tips, and exclusive member offers — delivered
-            with care. No noise, only things worth reading.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 bg-white border border-cream-300 hover:border-sage-300 focus:border-amber-400 text-forest-500 placeholder-sage-300 font-body text-sm px-5 py-3.5 focus:outline-none transition-colors rounded-full"
-              required
-            />
-            <MagneticButton strength={8}>
-              <button
-                type="submit"
-                className="bg-forest-500 hover:bg-forest-400 text-white font-body font-medium tracking-widest uppercase text-xs px-7 py-3.5 transition-all duration-200 whitespace-nowrap rounded-full"
-              >
-                Subscribe
-              </button>
-            </MagneticButton>
-          </form>
-          <p className="font-body text-xs text-sage-400 mt-5">
-            No spam, ever. Unsubscribe at any time.
-          </p>
-        </ScrollReveal>
-      </div>
-    </section>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts(8);
@@ -258,7 +214,7 @@ export default async function HomePage() {
       <BrandStory />
       <BeforeAfterSection />
       <IngredientsSection />
-      <Newsletter />
+      <WhatsAppSection />
     </>
   );
 }

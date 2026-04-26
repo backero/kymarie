@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ShoppingBag, Heart, Leaf } from "lucide-react";
+import { ShoppingBag, Heart, Leaf, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useCart } from "@/hooks/useCart";
@@ -130,13 +130,13 @@ export function ProductCard({ product, className, initialWishlisted = false }: P
           )}
         </div>
 
-        {/* Wishlist button — appears on hover */}
+        {/* Wishlist button — always visible on mobile, hover on desktop */}
         <motion.button
           onClick={handleWishlist}
           disabled={wishlistLoading}
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.88 }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-cream-300 flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-cream-300 flex items-center justify-center shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           <AnimatePresence mode="wait">
@@ -157,8 +157,8 @@ export function ProductCard({ product, className, initialWishlisted = false }: P
           </AnimatePresence>
         </motion.button>
 
-        {/* Quick Add — slides up on hover */}
-        <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-350 ease-out">
+        {/* Quick Add — always visible on mobile, slides up on desktop hover */}
+        <div className="absolute bottom-0 left-0 right-0 translate-y-0 md:translate-y-full md:group-hover:translate-y-0 transition-transform duration-350 ease-out">
           <motion.button
             onClick={handleAddToCart}
             disabled={product.stock === 0}
@@ -212,8 +212,9 @@ export function ProductCard({ product, className, initialWishlisted = false }: P
           </div>
 
           {product.stock > 0 && product.stock <= 10 && (
-            <span className="font-body text-[10px] text-sage-500 font-medium bg-cream-200 border border-cream-300 px-2 py-0.5 rounded-full whitespace-nowrap">
-              {product.stock} left
+            <span className="inline-flex items-center gap-1 font-body text-[10px] text-amber-700 font-medium bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+              <AlertTriangle className="w-3 h-3" strokeWidth={2} />
+              Only {product.stock} left
             </span>
           )}
         </div>

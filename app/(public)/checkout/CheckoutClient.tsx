@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -9,11 +9,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   ArrowLeft, Lock, Loader2, MapPin, CheckCircle2, Plus, ChevronDown, ChevronUp,
+  CreditCard, Smartphone, Banknote, Search, Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice } from "@/lib/utils";
-import { createOrder } from "@/actions/orders";
+import { createOrder, confirmCODOrder } from "@/actions/orders";
 import { FadeUp, SlideReveal } from "@/components/animations";
 import { cn } from "@/lib/utils";
 import type { RazorpayOptions, RazorpayResponse } from "@/types";
@@ -25,6 +26,8 @@ const SHIPPING_FEE = 60;
 const DEMO_MODE =
   !process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
   process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID.startsWith("rzp_test_xxx");
+
+type PaymentMethod = "online" | "upi" | "cod";
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Name is required"),
@@ -42,49 +45,172 @@ const checkoutSchema = z.object({
 type CheckoutForm = z.infer<typeof checkoutSchema>;
 
 const indianStates = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
-  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
-  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-  "Andaman and Nicobar Islands", "Chandigarh", "Delhi", "Jammu and Kashmir",
-  "Ladakh", "Lakshadweep", "Puducherry",
+  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh",
+  "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Delhi", "Goa", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
+  "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur",
+  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab",
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+  "Uttarakhand", "West Bengal",
 ];
 
 export type SavedAddress = {
-  id: string;
-  label: string;
-  name: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-  isPrimary: boolean;
+  id: string; label: string; name: string; phone: string;
+  addressLine1: string; addressLine2: string | null;
+  city: string; state: string; pincode: string;
+  country: string; isPrimary: boolean;
 };
 
 export type CheckoutPrefill = {
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
+  customerName?: string; customerEmail?: string; customerPhone?: string;
 };
 
-function FormField({
-  label,
+// ── State Combobox ────────────────────────────────────────────────────────────
+function StateCombobox({
+  value,
+  onChange,
   error,
-  required,
-  className,
-  children,
-  delay = 0,
+  inputClass,
 }: {
-  label: string;
+  value: string;
+  onChange: (v: string) => void;
   error?: string;
-  required?: boolean;
-  className?: string;
-  children: React.ReactNode;
-  delay?: number;
+  inputClass: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const filtered = indianStates.filter((s) =>
+    s.toLowerCase().includes(query.toLowerCase())
+  );
+
+  useEffect(() => { setQuery(value); }, [value]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const select = (state: string) => {
+    onChange(state);
+    setQuery(state);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sage-400 pointer-events-none" />
+        <input
+          type="text"
+          autoComplete="address-level1"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder="Search state…"
+          className={cn(inputClass, "pl-10 pr-8")}
+        />
+        <ChevronDown className={cn(
+          "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sage-400 pointer-events-none transition-transform duration-200",
+          open && "rotate-180"
+        )} />
+      </div>
+
+      <AnimatePresence>
+        {open && filtered.length > 0 && (
+          <motion.ul
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 mt-1 w-full bg-white border border-cream-300 shadow-lg max-h-52 overflow-y-auto"
+          >
+            {filtered.map((state) => (
+              <li key={state}>
+                <button
+                  type="button"
+                  onClick={() => select(state)}
+                  className={cn(
+                    "w-full text-left px-4 py-2.5 font-body text-sm flex items-center justify-between hover:bg-cream-100 transition-colors",
+                    value === state ? "text-forest-600 bg-cream-50" : "text-forest-700"
+                  )}
+                >
+                  {state}
+                  {value === state && <Check className="w-3.5 h-3.5 text-forest-500" />}
+                </button>
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+
+      {error && (
+        <p className="text-red-500 text-xs mt-1 font-body">{error}</p>
+      )}
+    </div>
+  );
+}
+
+// ── Payment Method Selector ───────────────────────────────────────────────────
+function PaymentSelector({
+  value,
+  onChange,
+}: {
+  value: PaymentMethod;
+  onChange: (v: PaymentMethod) => void;
+}) {
+  const options: { id: PaymentMethod; icon: React.ElementType; label: string; desc: string }[] = [
+    { id: "online", icon: CreditCard, label: "Card / Netbanking", desc: "Pay securely via Razorpay" },
+    { id: "upi",    icon: Smartphone, label: "UPI",               desc: "GPay, PhonePe, Paytm & more" },
+    { id: "cod",    icon: Banknote,   label: "Cash on Delivery",  desc: "Pay when your order arrives" },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {options.map(({ id, icon: Icon, label, desc }) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onChange(id)}
+          className={cn(
+            "flex flex-col items-start gap-2 p-4 border-2 rounded-xl text-left transition-all duration-200",
+            value === id
+              ? "border-forest-500 bg-forest-50"
+              : "border-cream-300 hover:border-cream-400 bg-white"
+          )}
+        >
+          <div className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center",
+            value === id ? "bg-forest-500 text-white" : "bg-cream-200 text-sage-500"
+          )}>
+            <Icon className="w-4 h-4" strokeWidth={1.5} />
+          </div>
+          <div>
+            <p className={cn(
+              "font-body text-sm font-semibold",
+              value === id ? "text-forest-700" : "text-forest-600"
+            )}>{label}</p>
+            <p className="font-body text-[11px] text-sage-400 mt-0.5">{desc}</p>
+          </div>
+          {value === id && (
+            <CheckCircle2 className="absolute top-3 right-3 w-4 h-4 text-forest-500" />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Form Field Wrapper ────────────────────────────────────────────────────────
+function FormField({
+  label, error, required, className, children, delay = 0,
+}: {
+  label: string; error?: string; required?: boolean;
+  className?: string; children: React.ReactNode; delay?: number;
 }) {
   return (
     <motion.div
@@ -114,10 +240,9 @@ function FormField({
   );
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function CheckoutClient({
-  userId,
-  prefill,
-  savedAddresses,
+  userId, prefill, savedAddresses,
 }: {
   userId?: string;
   prefill?: CheckoutPrefill;
@@ -128,40 +253,37 @@ export default function CheckoutClient({
   const subtotal = getSubtotal();
   const shippingFee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + shippingFee;
+
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     savedAddresses?.find((a) => a.isPrimary)?.id ?? savedAddresses?.[0]?.id ?? null
   );
-  const [showAddressPicker, setShowAddressPicker] = useState(
-    (savedAddresses?.length ?? 0) > 0
-  );
+  const [showAddressPicker, setShowAddressPicker] = useState((savedAddresses?.length ?? 0) > 0);
 
   const primaryAddress = savedAddresses?.find((a) => a.id === selectedAddressId);
 
   const {
-    register,
-    handleSubmit,
-    setValue,
+    register, handleSubmit, setValue, watch,
     formState: { errors },
   } = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      customerName: prefill?.customerName ?? "",
+      customerName:  prefill?.customerName  ?? "",
       customerEmail: prefill?.customerEmail ?? "",
       customerPhone: prefill?.customerPhone ?? "",
-      ...(primaryAddress
-        ? {
-            addressLine1: primaryAddress.addressLine1,
-            addressLine2: primaryAddress.addressLine2 ?? "",
-            city: primaryAddress.city,
-            state: primaryAddress.state,
-            pincode: primaryAddress.pincode,
-          }
-        : {}),
+      ...(primaryAddress ? {
+        addressLine1: primaryAddress.addressLine1,
+        addressLine2: primaryAddress.addressLine2 ?? "",
+        city:         primaryAddress.city,
+        state:        primaryAddress.state,
+        pincode:      primaryAddress.pincode,
+      } : {}),
     },
   });
 
-  // When user selects a different saved address, update form fields
+  const stateValue = watch("state");
+
   useEffect(() => {
     if (!selectedAddressId || !savedAddresses) return;
     const addr = savedAddresses.find((a) => a.id === selectedAddressId);
@@ -172,7 +294,7 @@ export default function CheckoutClient({
     setValue("state", addr.state);
     setValue("pincode", addr.pincode);
     if (!prefill?.customerPhone) setValue("customerPhone", addr.phone);
-    if (!prefill?.customerName) setValue("customerName", addr.name);
+    if (!prefill?.customerName)  setValue("customerName", addr.name);
   }, [selectedAddressId, savedAddresses, setValue, prefill]);
 
   const inputClass =
@@ -189,17 +311,28 @@ export default function CheckoutClient({
         quantity: item.quantity,
         unitPrice: item.price,
       })),
-      subtotal,
-      shippingFee,
-      discount: 0,
-      total,
-      country: "India",
+      subtotal, shippingFee, discount: 0, total, country: "India",
     });
 
-    if (!orderResult.success || !orderResult.order) {
+    if (!orderResult.success || !orderResult.order)
       throw new Error(orderResult.error || "Failed to create order");
-    }
     return orderResult.order;
+  };
+
+  const loadRazorpay = async () => {
+    const win = window as typeof window & {
+      Razorpay: new (opts: RazorpayOptions) => { open: () => void };
+    };
+    if (!win.Razorpay) {
+      await new Promise<void>((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://checkout.razorpay.com/v1/checkout.js";
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error("Failed to load Razorpay"));
+        document.head.appendChild(s);
+      });
+    }
+    return win.Razorpay;
   };
 
   const onSubmit = async (formData: CheckoutForm) => {
@@ -209,6 +342,20 @@ export default function CheckoutClient({
     try {
       const order = await placeOrder(formData);
 
+      // ── COD flow ──────────────────────────────────────────────────────────
+      if (paymentMethod === "cod") {
+        const result = await confirmCODOrder(order.id);
+        if (result.success) {
+          clearCart();
+          toast.success("Order placed! Pay on delivery.");
+          router.push(`/checkout/success?order=${order.orderNumber}`);
+        } else {
+          toast.error("Failed to place order. Please try again.");
+        }
+        return;
+      }
+
+      // ── Demo mode (both online & UPI) ─────────────────────────────────────
       if (DEMO_MODE) {
         const res = await fetch("/api/payment/demo", {
           method: "POST",
@@ -218,7 +365,7 @@ export default function CheckoutClient({
         const data = await res.json();
         if (data.success) {
           clearCart();
-          toast.success("Demo payment successful! 🎉");
+          toast.success("Demo payment successful!");
           router.push(`/checkout/success?order=${order.orderNumber}`);
         } else {
           toast.error("Demo payment failed");
@@ -226,17 +373,14 @@ export default function CheckoutClient({
         return;
       }
 
+      // ── Razorpay (Online / UPI) ───────────────────────────────────────────
       const razorpayRes = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId: order.id, amount: total }),
       });
       const razorpayData = await razorpayRes.json();
-
-      if (!razorpayData.success) {
-        toast.error("Payment initialization failed");
-        return;
-      }
+      if (!razorpayData.success) { toast.error("Payment initialization failed"); return; }
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -246,6 +390,9 @@ export default function CheckoutClient({
         description: `Order #${order.orderNumber}`,
         image: "/logo.png",
         order_id: razorpayData.razorpayOrderId,
+        ...(paymentMethod === "upi" && {
+          method: { netbanking: false, card: false, wallet: false, upi: true },
+        }),
         handler: async (response: RazorpayResponse) => {
           const verifyRes = await fetch("/api/payment/verify", {
             method: "POST",
@@ -267,27 +414,15 @@ export default function CheckoutClient({
           }
         },
         prefill: {
-          name: formData.customerName,
-          email: formData.customerEmail,
+          name:    formData.customerName,
+          email:   formData.customerEmail,
           contact: formData.customerPhone,
         },
-        theme: { color: "#C8A020" },
+        theme: { color: "#2D4A2D" },
       };
 
-      if (typeof window !== "undefined") {
-        const win = window as typeof window & { Razorpay: new (opts: RazorpayOptions) => { open: () => void } };
-        if (!win.Razorpay) {
-          await new Promise<void>((resolve, reject) => {
-            const script = document.createElement("script");
-            script.src = "https://checkout.razorpay.com/v1/checkout.js";
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error("Failed to load Razorpay"));
-            document.head.appendChild(script);
-          });
-        }
-        const rzp = new win.Razorpay(options);
-        rzp.open();
-      }
+      const RazorpayClass = await loadRazorpay();
+      new RazorpayClass(options).open();
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.");
@@ -305,42 +440,34 @@ export default function CheckoutClient({
           transition={{ duration: 0.4 }}
           className="text-center py-16"
         >
-          <h2 className="font-display text-3xl text-forest-600 mb-3">
-            Your cart is empty
-          </h2>
-          <Link href="/products" className="btn-primary">
-            Browse Products
-          </Link>
+          <h2 className="font-display text-3xl text-forest-600 mb-3">Your cart is empty</h2>
+          <Link href="/products" className="btn-primary">Browse Products</Link>
         </motion.div>
       </div>
     );
   }
 
+  const submitLabel =
+    paymentMethod === "cod" ? "Place Order — Pay on Delivery"
+    : paymentMethod === "upi" ? (DEMO_MODE ? "Demo Pay (UPI)" : "Pay via UPI")
+    : (DEMO_MODE ? "Demo Pay (Simulate)" : "Pay Now");
+
   return (
     <div className="min-h-screen bg-cream-100 pt-20">
-      {/* Payment processing overlay */}
+      {/* Processing overlay */}
       <AnimatePresence>
         {isProcessing && (
           <motion.div
             key="processing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-5"
           >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-            >
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}>
               <Loader2 className="w-10 h-10 text-amber-500" />
             </motion.div>
             <div className="text-center">
-              <p className="font-display text-2xl text-forest-700 mb-1">
-                Processing your order
-              </p>
-              <p className="font-body text-sm text-sage-500">
-                Please wait, do not close this tab...
-              </p>
+              <p className="font-display text-2xl text-forest-700 mb-1">Processing your order</p>
+              <p className="font-body text-sm text-sage-500">Please wait, do not close this tab…</p>
             </div>
           </motion.div>
         )}
@@ -351,17 +478,12 @@ export default function CheckoutClient({
         <div className="bg-white border-b border-cream-300 py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div whileHover={{ x: -3 }} transition={{ duration: 0.2 }}>
-              <Link
-                href="/cart"
-                className="inline-flex items-center gap-2 font-body text-sm text-sage-500 hover:text-forest-600 transition-colors mb-4"
-              >
+              <Link href="/cart" className="inline-flex items-center gap-2 font-body text-sm text-sage-500 hover:text-forest-600 transition-colors mb-4">
                 <ArrowLeft className="w-4 h-4" />
                 Back to cart
               </Link>
             </motion.div>
-            <h1 className="font-display text-4xl font-light text-forest-700">
-              Checkout
-            </h1>
+            <h1 className="font-display text-4xl font-light text-forest-700">Checkout</h1>
           </div>
         </div>
       </FadeUp>
@@ -369,14 +491,12 @@ export default function CheckoutClient({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Shipping Form */}
             <div className="lg:col-span-2 space-y-8">
 
-              {/* ── Saved Address Picker (if logged in with saved addresses) ── */}
+              {/* Saved Address Picker */}
               {savedAddresses && savedAddresses.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.45, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
                   className="bg-white border border-cream-300 p-6 md:p-8"
                 >
@@ -392,18 +512,13 @@ export default function CheckoutClient({
                         ({savedAddresses.length})
                       </span>
                     </h2>
-                    {showAddressPicker ? (
-                      <ChevronUp className="w-4 h-4 text-sage-400" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-sage-400" />
-                    )}
+                    {showAddressPicker ? <ChevronUp className="w-4 h-4 text-sage-400" /> : <ChevronDown className="w-4 h-4 text-sage-400" />}
                   </button>
 
                   <AnimatePresence initial={false}>
                     {showAddressPicker && (
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
+                        initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                         className="overflow-hidden"
@@ -411,8 +526,7 @@ export default function CheckoutClient({
                         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {savedAddresses.map((addr) => (
                             <button
-                              key={addr.id}
-                              type="button"
+                              key={addr.id} type="button"
                               onClick={() => setSelectedAddressId(addr.id)}
                               className={cn(
                                 "text-left p-4 rounded-xl border-2 transition-all duration-200 relative",
@@ -421,44 +535,30 @@ export default function CheckoutClient({
                                   : "border-cream-300 hover:border-cream-400 bg-white"
                               )}
                             >
-                              {/* Selected indicator */}
                               {selectedAddressId === addr.id && (
                                 <span className="absolute top-3 right-3">
                                   <CheckCircle2 className="w-4 h-4 text-forest-500" />
                                 </span>
                               )}
-
                               <div className="flex items-center gap-2 mb-2">
                                 <span className={cn(
                                   "font-body text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full",
-                                  selectedAddressId === addr.id
-                                    ? "bg-forest-500 text-white"
-                                    : "bg-cream-200 text-sage-600"
-                                )}>
-                                  {addr.label}
-                                </span>
+                                  selectedAddressId === addr.id ? "bg-forest-500 text-white" : "bg-cream-200 text-sage-600"
+                                )}>{addr.label}</span>
                                 {addr.isPrimary && (
                                   <span className="font-body text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
                                     Default
                                   </span>
                                 )}
                               </div>
-                              <p className="font-body text-sm font-medium text-forest-700">
-                                {addr.name}
-                              </p>
+                              <p className="font-body text-sm font-medium text-forest-700">{addr.name}</p>
                               <p className="font-body text-xs text-sage-500 mt-0.5 leading-relaxed">
-                                {addr.addressLine1}
-                                {addr.addressLine2 && `, ${addr.addressLine2}`}
-                                <br />
-                                {addr.city}, {addr.state} — {addr.pincode}
+                                {addr.addressLine1}{addr.addressLine2 && `, ${addr.addressLine2}`}
+                                <br />{addr.city}, {addr.state} — {addr.pincode}
                               </p>
-                              <p className="font-body text-xs text-sage-400 mt-1">
-                                {addr.phone}
-                              </p>
+                              <p className="font-body text-xs text-sage-400 mt-1">{addr.phone}</p>
                             </button>
                           ))}
-
-                          {/* Add new address link */}
                           <Link
                             href="/profile"
                             target="_blank"
@@ -474,10 +574,9 @@ export default function CheckoutClient({
                 </motion.div>
               )}
 
-              {/* Contact */}
+              {/* Contact Information */}
               <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                 className="bg-white border border-cream-300 p-6 md:p-8"
               >
@@ -488,6 +587,7 @@ export default function CheckoutClient({
                   <FormField label="Full Name" error={errors.customerName?.message} required className="md:col-span-2" delay={0.15}>
                     <input
                       {...register("customerName")}
+                      autoComplete="name"
                       className={inputClass}
                       placeholder="Ananya Kumar"
                     />
@@ -496,6 +596,7 @@ export default function CheckoutClient({
                     <input
                       {...register("customerEmail")}
                       type="email"
+                      autoComplete="email"
                       className={inputClass}
                       placeholder="ananya@example.com"
                     />
@@ -504,8 +605,9 @@ export default function CheckoutClient({
                     <input
                       {...register("customerPhone")}
                       type="tel"
+                      autoComplete="tel-national"
                       className={inputClass}
-                      placeholder="9876543210"
+                      placeholder="9876543210 (10 digits)"
                       maxLength={10}
                     />
                   </FormField>
@@ -514,8 +616,7 @@ export default function CheckoutClient({
 
               {/* Shipping Address */}
               <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
                 className="bg-white border border-cream-300 p-6 md:p-8"
               >
@@ -531,6 +632,7 @@ export default function CheckoutClient({
                   <FormField label="Address Line 1" error={errors.addressLine1?.message} required className="md:col-span-2" delay={0.25}>
                     <input
                       {...register("addressLine1")}
+                      autoComplete="address-line1"
                       className={inputClass}
                       placeholder="House/Flat no., Street, Area"
                     />
@@ -538,6 +640,7 @@ export default function CheckoutClient({
                   <FormField label="Address Line 2" className="md:col-span-2" delay={0.3}>
                     <input
                       {...register("addressLine2")}
+                      autoComplete="address-line2"
                       className={inputClass}
                       placeholder="Landmark, Colony (optional)"
                     />
@@ -545,6 +648,7 @@ export default function CheckoutClient({
                   <FormField label="City" error={errors.city?.message} required delay={0.32}>
                     <input
                       {...register("city")}
+                      autoComplete="address-level2"
                       className={inputClass}
                       placeholder="Bengaluru"
                     />
@@ -552,25 +656,57 @@ export default function CheckoutClient({
                   <FormField label="Pincode" error={errors.pincode?.message} required delay={0.34}>
                     <input
                       {...register("pincode")}
+                      autoComplete="postal-code"
+                      inputMode="numeric"
                       className={inputClass}
                       placeholder="560001"
                       maxLength={6}
                     />
                   </FormField>
                   <FormField label="State" error={errors.state?.message} required className="md:col-span-2" delay={0.36}>
-                    <select
-                      {...register("state")}
-                      className={inputClass}
-                    >
-                      <option value="">Select state</option>
-                      {indianStates.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
-                    </select>
+                    <StateCombobox
+                      value={stateValue ?? ""}
+                      onChange={(v) => setValue("state", v, { shouldValidate: true })}
+                      error={errors.state?.message}
+                      inputClass={inputClass}
+                    />
                   </FormField>
                 </div>
+              </motion.div>
+
+              {/* Payment Method */}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-white border border-cream-300 p-6 md:p-8"
+              >
+                <h2 className="font-display text-xl font-medium text-forest-700 mb-6 pb-4 border-b border-cream-300">
+                  Payment Method
+                </h2>
+                <PaymentSelector value={paymentMethod} onChange={setPaymentMethod} />
+
+                {paymentMethod === "cod" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="mt-4 flex items-start gap-3 bg-amber-50 border border-amber-200 px-4 py-3 rounded-xl"
+                  >
+                    <Banknote className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <p className="font-body text-xs text-amber-700 leading-relaxed">
+                      Please keep the exact amount ready at the time of delivery. Our delivery partner will collect the payment.
+                    </p>
+                  </motion.div>
+                )}
+
+                {paymentMethod === "upi" && DEMO_MODE && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="mt-4 font-body text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl"
+                  >
+                    🧪 Demo mode — UPI flow simulated, no real payment charged.
+                  </motion.p>
+                )}
               </motion.div>
             </div>
 
@@ -581,7 +717,6 @@ export default function CheckoutClient({
                   Order Summary
                 </h2>
 
-                {/* Items */}
                 <ul className="space-y-4 mb-5">
                   {items.map((item, i) => (
                     <motion.li
@@ -592,30 +727,19 @@ export default function CheckoutClient({
                       className="flex gap-3"
                     >
                       <div className="relative w-14 h-14 flex-shrink-0 overflow-hidden bg-cream-200">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
+                        <Image src={item.image} alt={item.name} fill className="object-cover" sizes="56px" />
                         <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-forest-500 text-cream-100 text-xs font-body font-medium rounded-full flex items-center justify-center">
                           {item.quantity}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-body text-sm font-medium text-forest-700 line-clamp-1">
-                          {item.name}
-                        </p>
-                        <p className="font-body text-sm text-sage-500">
-                          {formatPrice(item.price * item.quantity)}
-                        </p>
+                        <p className="font-body text-sm font-medium text-forest-700 line-clamp-1">{item.name}</p>
+                        <p className="font-body text-sm text-sage-500">{formatPrice(item.price * item.quantity)}</p>
                       </div>
                     </motion.li>
                   ))}
                 </ul>
 
-                {/* Pricing */}
                 <div className="border-t border-cream-300 pt-4 space-y-2 mb-5">
                   <div className="flex justify-between font-body text-sm">
                     <span className="text-sage-600">Subtotal</span>
@@ -627,6 +751,12 @@ export default function CheckoutClient({
                       {shippingFee === 0 ? "Free" : formatPrice(shippingFee)}
                     </span>
                   </div>
+                  {paymentMethod === "cod" && (
+                    <div className="flex justify-between font-body text-sm">
+                      <span className="text-sage-600">COD Charges</span>
+                      <span className="text-forest-700">Free</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-cream-300 pt-4 mb-6">
@@ -636,9 +766,11 @@ export default function CheckoutClient({
                       {formatPrice(total)}
                     </span>
                   </div>
+                  {paymentMethod === "cod" && (
+                    <p className="font-body text-[11px] text-sage-400 mt-1">Payable on delivery</p>
+                  )}
                 </div>
 
-                {/* Pay button */}
                 <motion.button
                   type="submit"
                   disabled={isProcessing}
@@ -649,32 +781,23 @@ export default function CheckoutClient({
                 >
                   <AnimatePresence mode="wait">
                     {isProcessing ? (
-                      <motion.span
-                        key="loading"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex items-center gap-2"
-                      >
+                      <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Processing...
+                        Processing…
                       </motion.span>
                     ) : (
-                      <motion.span
-                        key="pay"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex items-center gap-2"
-                      >
-                        <Lock className="w-4 h-4" />
-                        {DEMO_MODE ? "Demo Pay (Simulate)" : "Pay Now"}
+                      <motion.span key="pay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                        {paymentMethod === "cod"
+                          ? <Banknote className="w-4 h-4" />
+                          : <Lock className="w-4 h-4" />
+                        }
+                        {submitLabel}
                       </motion.span>
                     )}
                   </AnimatePresence>
                 </motion.button>
 
-                {DEMO_MODE && (
+                {DEMO_MODE && paymentMethod !== "cod" && (
                   <p className="font-body text-[11px] text-amber-600 text-center bg-amber-50 border border-amber-200 px-3 py-2 mt-2">
                     🧪 Demo mode — no real payment will be charged
                   </p>
@@ -683,7 +806,7 @@ export default function CheckoutClient({
                 <div className="flex items-center justify-center gap-2 mt-3">
                   <Lock className="w-3 h-3 text-sage-400" />
                   <p className="font-body text-xs text-sage-400">
-                    {DEMO_MODE ? "Demo mode active" : "Secured by Razorpay"}
+                    {paymentMethod === "cod" ? "Order placed securely" : DEMO_MODE ? "Demo mode active" : "Secured by Razorpay"}
                   </p>
                 </div>
               </div>
