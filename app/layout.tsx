@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 import { SessionProvider } from "next-auth/react";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { auth } from "@/auth";
 import "./globals.css";
 
@@ -119,6 +119,16 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
+        {process.env.NEXT_PUBLIC_GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${process.env.NEXT_PUBLIC_GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        )}
         <SessionProvider session={session}>
           {children}
           <Toaster
@@ -145,6 +155,9 @@ export default async function RootLayout({
       </body>
       {process.env.NEXT_PUBLIC_GA_ID && (
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+      )}
+      {process.env.NEXT_PUBLIC_GTM_ID && (
+        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
       )}
     </html>
   );
