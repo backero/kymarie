@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 import { SessionProvider } from "next-auth/react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { auth } from "@/auth";
 import "./globals.css";
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.kumarie.in";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: {
     default: "Kumarie — Handcrafted Natural Soaps",
     template: "%s | Kumarie",
@@ -23,17 +27,20 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Kumarie" }],
   creator: "Kumarie",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: process.env.NEXT_PUBLIC_APP_URL,
+    url: appUrl,
     siteName: "Kumarie",
     title: "Kumarie — Handcrafted Natural Soaps",
     description:
       "Artisanal handcrafted soaps made with pure botanicals and ancient herbal wisdom.",
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/og-image.jpg`,
+        url: `${appUrl}/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: "Kumarie Natural Soaps",
@@ -56,6 +63,34 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Kumarie",
+  url: appUrl,
+  logo: `${appUrl}/logo.png`,
+  description:
+    "Artisanal handcrafted soaps made with pure botanicals, cold-pressed oils, and ancient herbal wisdom.",
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Kumarie",
+  url: appUrl,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${appUrl}/products?search={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
 };
 
 export default async function RootLayout({
@@ -73,6 +108,14 @@ export default async function RootLayout({
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <body className="antialiased">
@@ -100,6 +143,9 @@ export default async function RootLayout({
           />
         </SessionProvider>
       </body>
+      {process.env.NEXT_PUBLIC_GA_ID && (
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+      )}
     </html>
   );
 }

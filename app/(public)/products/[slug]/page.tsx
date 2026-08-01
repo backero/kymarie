@@ -11,6 +11,8 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.kumarie.in";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
@@ -19,6 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: product.metaTitle || product.name,
     description: product.metaDesc || product.shortDesc || product.description.slice(0, 160),
+    alternates: {
+      canonical: `/products/${product.slug}`,
+    },
     openGraph: {
       title: product.name,
       description: product.shortDesc || product.description.slice(0, 160),
@@ -40,8 +45,60 @@ export default async function ProductPage({ params }: Props) {
 
   const related = relatedProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.shortDesc || product.description,
+    image: product.images,
+    sku: product.sku || undefined,
+    brand: {
+      "@type": "Brand",
+      name: "Kumarie",
+    },
+    offers: {
+      "@type": "Offer",
+      url: `${appUrl}/products/${product.slug}`,
+      priceCurrency: "INR",
+      price: product.price,
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: appUrl },
+      { "@type": "ListItem", position: 2, name: "Products", item: `${appUrl}/products` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.category.name,
+        item: `${appUrl}/products?category=${product.category.slug}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: product.name,
+        item: `${appUrl}/products/${product.slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-cream-100 pt-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           {/* Images */}

@@ -10,6 +10,14 @@ export const metadata: Metadata = {
   title: "Shop All Natural Soaps",
   description:
     "Browse Kumarie's full collection of handcrafted natural soaps. From brightening rose & saffron to purifying neem & turmeric.",
+  alternates: {
+    canonical: "/products",
+  },
+  openGraph: {
+    title: "Shop All Natural Soaps | Kumarie",
+    description:
+      "Browse Kumarie's full collection of handcrafted natural soaps. From brightening rose & saffron to purifying neem & turmeric.",
+  },
 };
 
 interface SearchParams {
