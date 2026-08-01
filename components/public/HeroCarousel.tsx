@@ -12,16 +12,13 @@ import {
 import { ArrowRight, ChevronLeft, ChevronRight, Star } from "lucide-react";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
-const SLIDES = [
+const SLIDE_COPY = [
   {
     badge: "New Collection · 2024",
     headline: "Nature's finest",
     accent: "on your skin",
     body: "Handcrafted soaps born from Ayurvedic wisdom. Cold-pressed oils, six weeks cured — for skin that feels truly loved.",
     cta: { label: "Explore Collection", href: "/products" },
-    image:
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=1200&q=90",
-    alt: "Kumarie handcrafted soaps with botanicals",
   },
   {
     badge: "The Craft",
@@ -29,9 +26,6 @@ const SLIDES = [
     accent: "every bar",
     body: "Cold-process curing locks every botanical benefit deep into each bar. No shortcuts. No compromise. Just pure skin science.",
     cta: { label: "Shop Bestsellers", href: "/products" },
-    image:
-      "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=1200&q=90",
-    alt: "Soap making process with natural ingredients",
   },
   {
     badge: "Pure Ingredients",
@@ -39,11 +33,20 @@ const SLIDES = [
     accent: "All botanical.",
     body: "No SLS. No parabens. No synthetic fragrance. Every ingredient chosen for your skin — and the planet.",
     cta: { label: "View Ingredients", href: "/#ingredients" },
-    image:
-      "https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=1200&q=90",
-    alt: "Fresh botanical herbs and flowers",
   },
 ] as const;
+
+export interface HeroImage {
+  src: string;
+  alt: string;
+}
+
+const FALLBACK_IMAGES: HeroImage[] = [
+  {
+    src: "/og-image.jpg",
+    alt: "Kumarie handcrafted natural soaps",
+  },
+];
 
 const STATS = [
   { value: "10K+", label: "Happy customers" },
@@ -97,7 +100,14 @@ const textChildV = {
 };
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export function HeroCarousel() {
+export function HeroCarousel({ images }: { images?: HeroImage[] }) {
+  const heroImages = images && images.length > 0 ? images : FALLBACK_IMAGES;
+  const SLIDES = SLIDE_COPY.map((copy, i) => ({
+    ...copy,
+    image: heroImages[i % heroImages.length].src,
+    alt: heroImages[i % heroImages.length].alt,
+  }));
+
   const [current, setCurrent] = useState(0);
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);

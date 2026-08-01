@@ -18,7 +18,7 @@ import {
 import { getFeaturedProducts, getCategories } from "@/actions/products";
 import { ProductCard } from "@/components/public/ProductCard";
 import { TestimonialsCarousel } from "@/components/public/TestimonialsCarousel";
-import { HeroCarousel } from "@/components/public/HeroCarousel";
+import { HeroCarousel, type HeroImage } from "@/components/public/HeroCarousel";
 import type { Product, Category } from "@/types";
 
 // ─── Marquee Strip ─────────────────────────────────────────────────────────────
@@ -384,9 +384,14 @@ export default async function HomePage() {
     getCategories(),
   ]);
 
+  const heroImages: HeroImage[] = featuredProducts
+    .filter((p) => p.images.length > 0)
+    .slice(0, 3)
+    .map((p) => ({ src: p.images[0], alt: p.name }));
+
   return (
     <>
-      <HeroCarousel />
+      <HeroCarousel images={heroImages} />
       <MarqueeStrip />
       <FeaturesStrip />
 
