@@ -38,6 +38,15 @@ export async function toggleWishlist(userId: string, productId: string) {
   }
 }
 
+// ── Get wishlisted product IDs (for batch server-side lookups) ──────────────
+export async function getWishlistedProductIds(userId: string): Promise<string[]> {
+  const items = await prisma.wishlistItem.findMany({
+    where: { userId },
+    select: { productId: true },
+  });
+  return items.map((i) => i.productId);
+}
+
 // ── Check if product is wishlisted ─────────────────────────────────────────
 export async function isWishlisted(userId: string, productId: string) {
   const item = await prisma.wishlistItem.findUnique({

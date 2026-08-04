@@ -1,19 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Heart } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/hooks/useCart";
-import { formatPrice, calculateDiscount } from "@/lib/utils";
+import { toggleWishlist } from "@/actions/wishlist";
+import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
 import type { Product } from "@/types";
 import toast from "react-hot-toast";
 
-export function ProductDetailClient({ product }: { product: Product }) {
+export function ProductDetailClient({
+  product,
+  initialWishlisted = false,
+}: {
+  product: Product;
+  initialWishlisted?: boolean;
+}) {
   const [quantity, setQuantity] = useState(1);
   const { addItem, openCart } = useCart();
+  const { data: session } = useSession();
+  const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const discount = product.comparePrice
     ? calculateDiscount(product.price, product.comparePrice)
     : 0;
+
+  const handleWishlist = async () => {
+    if (!session || session.user?.role !== "user") {
+      toast.error("Sign in to save products to your wishlist");
+      return;
+    }
+    if (wishlistLoading) return;
+    setWishlistLoading(true);
+    try {
+      const result = await toggleWishlist(session.user.id, product.id);
+      setIsWishlisted(result.added);
+      toast.success(result.added ? "Added to wishlist" : "Removed from wishlist");
+    } catch {
+      toast.error("Failed to update wishlist");
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
@@ -85,19 +114,34 @@ export function ProductDetailClient({ product }: { product: Product }) {
         </div>
       )}
 
-      {/* Add to Cart Button */}
-      <button
-        onClick={handleAddToCart}
-        disabled={product.stock === 0}
-        className={`w-full flex items-center justify-center gap-3 py-4 font-body font-medium tracking-widest uppercase text-sm transition-all duration-300 ${
-          product.stock === 0
-            ? "bg-sage-200 text-sage-500 cursor-not-allowed"
-            : "bg-forest-500 hover:bg-forest-600 text-cream-100 group"
-        }`}
-      >
-        <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
-        {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-      </button>
+      {/* Add to Cart + Wishlist */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleAddToCart}
+          disabled={product.stock === 0}
+          className={`flex-1 flex items-center justify-center gap-3 py-4 font-body font-medium tracking-widest uppercase text-sm transition-all duration-300 ${
+            product.stock === 0
+              ? "bg-sage-200 text-sage-500 cursor-not-allowed"
+              : "bg-forest-500 hover:bg-forest-600 text-cream-100 group"
+          }`}
+        >
+          <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
+          {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+        </button>
+        <button
+          onClick={handleWishlist}
+          disabled={wishlistLoading}
+          className="w-14 h-14 flex-shrink-0 flex items-center justify-center border border-cream-300 hover:border-forest-400 transition-colors disabled:opacity-40"
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart
+            className={cn(
+              "w-5 h-5 transition-colors",
+              isWishlisted ? "text-red-500 fill-red-500" : "text-sage-500"
+            )}
+          />
+        </button>
+      </div>
 
       {product.stock > 0 && product.stock <= 5 && (
         <p className="font-body text-sm text-amber-600 text-center font-medium">

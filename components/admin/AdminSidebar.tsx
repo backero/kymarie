@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Settings,
   Tag,
+  Star,
   ExternalLink,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -43,6 +44,13 @@ const navSections = [
     label: "Sales",
     items: [
       { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      { label: "Coupons", href: "/admin/coupons", icon: Tag },
+      { label: "Reviews", href: "/admin/reviews", icon: Star },
     ],
   },
   {

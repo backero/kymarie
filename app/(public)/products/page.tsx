@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { getProducts, getCategories } from "@/actions/products";
+import { getWishlistedProductIds } from "@/actions/wishlist";
+import { auth } from "@/auth";
 import { ProductCard, ProductCardSkeleton } from "@/components/public/ProductCard";
 import { AnimatedProductsHeader, AnimatedProductsFilter, AnimatedProductGrid } from "./ProductsClient";
 import type { Product } from "@/types";
@@ -30,12 +32,20 @@ interface SearchParams {
 async function ProductGrid({ searchParams }: { searchParams: SearchParams }) {
   const { category, search, page = "1" } = searchParams;
 
-  const { products, total, totalPages, page: currentPage } = await getProducts({
-    category,
-    search,
-    page: parseInt(page),
-    limit: 12,
-  });
+  const [{ products, total, totalPages, page: currentPage }, session] = await Promise.all([
+    getProducts({
+      category,
+      search,
+      page: parseInt(page),
+      limit: 12,
+    }),
+    auth(),
+  ]);
+
+  const wishlistedIds =
+    session?.user?.role === "user"
+      ? await getWishlistedProductIds(session.user.id)
+      : [];
 
   if (products.length === 0) {
     return (
@@ -63,7 +73,11 @@ async function ProductGrid({ searchParams }: { searchParams: SearchParams }) {
       {/* Animated stagger grid */}
       <AnimatedProductGrid>
         {products.map((product) => (
-          <ProductCard key={product.id} product={product as Product} />
+          <ProductCard
+            key={product.id}
+            product={product as Product}
+            initialWishlisted={wishlistedIds.includes(product.id)}
+          />
         ))}
       </AnimatedProductGrid>
 

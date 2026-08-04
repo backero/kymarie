@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  ArrowLeft, Lock, Loader2, MapPin, CheckCircle2, Plus, ChevronDown, ChevronUp,
+  ArrowLeft, Lock, Loader2, MapPin, CheckCircle2, Plus, ChevronDown, ChevronUp, Tag,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
@@ -124,10 +124,10 @@ export default function CheckoutClient({
   savedAddresses?: SavedAddress[];
 }) {
   const router = useRouter();
-  const { items, clearCart, getSubtotal } = useCart();
+  const { items, clearCart, getSubtotal, couponCode, couponDiscount } = useCart();
   const subtotal = getSubtotal();
   const shippingFee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shippingFee;
+  const total = Math.max(0, subtotal + shippingFee - couponDiscount);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     savedAddresses?.find((a) => a.isPrimary)?.id ?? savedAddresses?.[0]?.id ?? null
@@ -191,7 +191,8 @@ export default function CheckoutClient({
       })),
       subtotal,
       shippingFee,
-      discount: 0,
+      discount: couponDiscount,
+      couponCode: couponCode ?? undefined,
       total,
       country: "India",
     });
@@ -627,6 +628,17 @@ export default function CheckoutClient({
                       {shippingFee === 0 ? "Free" : formatPrice(shippingFee)}
                     </span>
                   </div>
+                  {couponCode && (
+                    <div className="flex justify-between font-body text-sm">
+                      <span className="text-sage-600 flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-forest-500" />
+                        Coupon ({couponCode})
+                      </span>
+                      <span className="text-forest-500 font-medium">
+                        −{formatPrice(couponDiscount)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-cream-300 pt-4 mb-6">

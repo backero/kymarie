@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getProductBySlug, getProducts } from "@/actions/products";
+import { getProductReviewStats } from "@/actions/reviews";
+import { getWishlistedProductIds } from "@/actions/wishlist";
+import { auth } from "@/auth";
 import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductImageGallery } from "./ProductImageGallery";
+import { ProductReviews } from "./ProductReviews";
 import { ProductCard } from "@/components/public/ProductCard";
 import type { Product } from "@/types";
 import { Leaf, Star, Shield, Truck, RefreshCw } from "lucide-react";
@@ -44,6 +48,16 @@ export default async function ProductPage({ params }: Props) {
   });
 
   const related = relatedProducts.filter((p) => p.id !== product.id).slice(0, 4);
+
+  const [reviewStats, session] = await Promise.all([
+    getProductReviewStats(product.id),
+    auth(),
+  ]);
+
+  const wishlistedIds =
+    session?.user?.role === "user"
+      ? await getWishlistedProductIds(session.user.id)
+      : [];
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -125,15 +139,31 @@ export default async function ProductPage({ params }: Props) {
               {product.name}
             </h1>
 
-            {/* Rating placeholder */}
-            <div className="flex items-center gap-2 mb-5">
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                ))}
+            {/* Rating */}
+            {reviewStats.count > 0 ? (
+              <div className="flex items-center gap-2 mb-5">
+                <div className="flex items-center gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${
+                        i < Math.round(reviewStats.average)
+                          ? "text-amber-400 fill-amber-400"
+                          : "text-cream-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="font-body text-sm text-sage-500">
+                  {reviewStats.average.toFixed(1)} ({reviewStats.count}{" "}
+                  {reviewStats.count === 1 ? "review" : "reviews"})
+                </span>
               </div>
-              <span className="font-body text-sm text-sage-500">(24 reviews)</span>
-            </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-5">
+                <span className="font-body text-sm text-sage-400">No reviews yet</span>
+              </div>
+            )}
 
             {/* Short Description */}
             {product.shortDesc && (
@@ -143,7 +173,10 @@ export default async function ProductPage({ params }: Props) {
             )}
 
             {/* Client component for add to cart, etc. */}
-            <ProductDetailClient product={product as Product} />
+            <ProductDetailClient
+              product={product as Product}
+              initialWishlisted={wishlistedIds.includes(product.id)}
+            />
 
             {/* Benefits */}
             {product.benefits.length > 0 && (
@@ -212,11 +245,18 @@ export default async function ProductPage({ params }: Props) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {related.map((p) => (
-                <ProductCard key={p.id} product={p as Product} />
+                <ProductCard
+                  key={p.id}
+                  product={p as Product}
+                  initialWishlisted={wishlistedIds.includes(p.id)}
+                />
               ))}
             </div>
           </div>
         )}
+
+        {/* Reviews */}
+        <ProductReviews productId={product.id} reviews={product.reviews} />
       </div>
     </div>
   );

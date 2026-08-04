@@ -7,6 +7,8 @@ import type { CartItem } from "@/types";
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
+  couponCode: string | null;
+  couponDiscount: number;
 
   // Actions
   addItem: (item: Omit<CartItem, "quantity">) => void;
@@ -16,6 +18,8 @@ interface CartStore {
   toggleCart: () => void;
   openCart: () => void;
   closeCart: () => void;
+  setCoupon: (code: string, discount: number) => void;
+  clearCoupon: () => void;
 
   // Computed
   getTotal: () => number;
@@ -28,6 +32,8 @@ export const useCart = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      couponCode: null,
+      couponDiscount: 0,
 
       addItem: (newItem) => {
         set((state) => {
@@ -75,7 +81,7 @@ export const useCart = create<CartStore>()(
       },
 
       clearCart: () => {
-        set({ items: [] });
+        set({ items: [], couponCode: null, couponDiscount: 0 });
       },
 
       toggleCart: () => {
@@ -84,6 +90,14 @@ export const useCart = create<CartStore>()(
 
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
+
+      setCoupon: (code, discount) => {
+        set({ couponCode: code, couponDiscount: discount });
+      },
+
+      clearCoupon: () => {
+        set({ couponCode: null, couponDiscount: 0 });
+      },
 
       getTotal: () => {
         return get().items.reduce(

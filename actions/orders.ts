@@ -31,6 +31,7 @@ const CheckoutSchema = z.object({
   subtotal: z.number().positive(),
   shippingFee: z.number().min(0),
   discount: z.number().min(0).default(0),
+  couponCode: z.string().optional(),
   total: z.number().positive(),
 });
 
@@ -75,6 +76,7 @@ export async function createOrder(data: z.infer<typeof CheckoutSchema>) {
       subtotal: validated.subtotal,
       shippingFee: validated.shippingFee,
       discount: validated.discount,
+      couponCode: validated.couponCode ?? null,
       total: validated.total,
       status: "PENDING",
       paymentStatus: "PENDING",
@@ -122,6 +124,14 @@ export async function confirmPayment(
     await prisma.product.update({
       where: { id: item.productId },
       data: { stock: { decrement: item.quantity } },
+    });
+  }
+
+  // Credit coupon usage, if one was applied
+  if (order.couponCode) {
+    await prisma.coupon.updateMany({
+      where: { code: order.couponCode },
+      data: { usedCount: { increment: 1 } },
     });
   }
 

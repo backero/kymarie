@@ -133,6 +133,7 @@ model Order {
   subtotal      Float
   shippingFee   Float       @default(0)
   discount      Float       @default(0)
+  couponCode    String?
   total         Float
 
   // Payment

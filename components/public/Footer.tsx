@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Facebook, Twitter, Mail, MapPin, Phone } from "lucide-react";
+import { Instagram, Facebook, Twitter, Mail, MapPin } from "lucide-react";
 
 const footerLinks = {
   shop: [
@@ -11,7 +11,7 @@ const footerLinks = {
     { label: "Gift Sets", href: "/products?category=gift-sets" },
   ],
   info: [
-    { label: "Our Story", href: "/#about" },
+    { label: "Our Story", href: "/our-story" },
     { label: "Ingredients", href: "/#ingredients" },
     { label: "Sustainability", href: "/sustainability" },
     { label: "Journal", href: "/journal" },
@@ -71,19 +71,15 @@ export function Footer() {
             {/* Contact */}
             <div className="mt-8 space-y-2">
               <a
-                href="mailto:hello@kumarie.com"
+                href="mailto:kymariesoaps@gmail.com"
                 className="flex items-center gap-2 font-body text-xs text-sage-500 hover:text-amber-600 transition-colors"
               >
                 <Mail className="w-3.5 h-3.5" />
-                hello@kumarie.com
+                kymariesoaps@gmail.com
               </a>
-              <p className="flex items-center gap-2 font-body text-xs text-sage-500">
-                <Phone className="w-3.5 h-3.5" />
-                +91 98765 43210
-              </p>
               <p className="flex items-start gap-2 font-body text-xs text-sage-500">
                 <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                Bengaluru, Karnataka, India
+                42, Interflex Complex, Near 5K Car Care, Trichy Road, Sulur, Coimbatore – 641402
               </p>
             </div>
           </div>

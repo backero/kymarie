@@ -16,7 +16,10 @@ import {
   Feather,
 } from "lucide-react";
 import { getFeaturedProducts, getCategories } from "@/actions/products";
+import { getWishlistedProductIds } from "@/actions/wishlist";
+import { auth } from "@/auth";
 import { ProductCard } from "@/components/public/ProductCard";
+import { NewsletterForm } from "@/components/public/NewsletterForm";
 import { TestimonialsCarousel } from "@/components/public/TestimonialsCarousel";
 import { HeroCarousel, type HeroImage } from "@/components/public/HeroCarousel";
 import type { Product, Category } from "@/types";
@@ -355,20 +358,7 @@ function Newsletter() {
           Skincare wisdom, new arrivals, and exclusive member offers — delivered
           with care. No noise, only things worth reading.
         </p>
-        <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-          <input
-            type="email"
-            placeholder="your@email.com"
-            className="flex-1 bg-white border border-cream-300 hover:border-sage-300 focus:border-amber-400 text-forest-500 placeholder-sage-300 font-body text-sm px-5 py-3.5 focus:outline-none transition-colors rounded-full"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-forest-500 hover:bg-forest-400 text-white font-body font-medium tracking-widest uppercase text-xs px-7 py-3.5 transition-all duration-200 whitespace-nowrap rounded-full"
-          >
-            Subscribe
-          </button>
-        </form>
+        <NewsletterForm />
         <p className="font-body text-xs text-sage-400 mt-5">
           No spam, ever. Unsubscribe at any time.
         </p>
@@ -379,10 +369,16 @@ function Newsletter() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default async function HomePage() {
-  const [featuredProducts, categories] = await Promise.all([
+  const [featuredProducts, categories, session] = await Promise.all([
     getFeaturedProducts(8),
     getCategories(),
+    auth(),
   ]);
+
+  const wishlistedIds =
+    session?.user?.role === "user"
+      ? await getWishlistedProductIds(session.user.id)
+      : [];
 
   const heroImages: HeroImage[] = featuredProducts
     .filter((p) => p.images.length > 0)
@@ -424,7 +420,10 @@ export default async function HomePage() {
                 key={product.id}
                 className="flex-shrink-0 w-64 sm:w-72 md:w-auto"
               >
-                <ProductCard product={product as Product} />
+                <ProductCard
+                  product={product as Product}
+                  initialWishlisted={wishlistedIds.includes(product.id)}
+                />
               </div>
             ))}
           </div>

@@ -1,21 +1,57 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, ShoppingBag, Minus, Plus, Trash2, ArrowRight } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Minus, Plus, Trash2, ArrowRight, Tag, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice } from "@/lib/utils";
+import { validateCoupon } from "@/actions/coupons";
 import { FadeUp, SlideReveal } from "@/components/animations";
+import toast from "react-hot-toast";
 
 const SHIPPING_THRESHOLD = 599;
 const SHIPPING_FEE = 60;
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, getSubtotal } = useCart();
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    getSubtotal,
+    couponCode,
+    couponDiscount,
+    setCoupon,
+    clearCoupon,
+  } = useCart();
   const subtotal = getSubtotal();
   const shippingFee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shippingFee;
+  const total = Math.max(0, subtotal + shippingFee - couponDiscount);
+
+  const [couponInput, setCouponInput] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setIsApplying(true);
+    try {
+      const result = await validateCoupon(code, subtotal);
+      if (result.success && result.discount !== undefined && result.code) {
+        setCoupon(result.code, result.discount);
+        toast.success(`Coupon "${result.code}" applied`);
+        setCouponInput("");
+      } else {
+        toast.error(result.error || "Invalid coupon");
+      }
+    } catch {
+      toast.error("Failed to apply coupon");
+    } finally {
+      setIsApplying(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-cream-100 pt-20">
@@ -264,6 +300,55 @@ export default function CartPage() {
                       >
                         Add {formatPrice(SHIPPING_THRESHOLD - subtotal)} more for free shipping
                       </motion.p>
+                    )}
+                    {couponCode && (
+                      <div className="flex items-center justify-between font-body text-sm">
+                        <span className="text-sage-600 flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-forest-500" />
+                          Coupon ({couponCode})
+                        </span>
+                        <span className="text-forest-500 font-medium">
+                          −{formatPrice(couponDiscount)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Coupon input */}
+                  <div className="mb-6">
+                    {couponCode ? (
+                      <button
+                        type="button"
+                        onClick={clearCoupon}
+                        className="flex items-center gap-1.5 font-body text-xs text-sage-400 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Remove coupon
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())
+                          }
+                          placeholder="Coupon code"
+                          className="flex-1 border border-cream-300 px-3 py-2.5 font-body text-sm text-forest-700 focus:outline-none focus:border-amber-400 bg-cream-50 placeholder-sage-300 uppercase"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={isApplying || !couponInput.trim()}
+                          className="flex items-center justify-center gap-1.5 bg-forest-500 hover:bg-forest-600 disabled:bg-sage-300 text-cream-100 font-body text-xs font-medium px-4 transition-colors whitespace-nowrap"
+                        >
+                          {isApplying ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            "Apply"
+                          )}
+                        </button>
+                      </div>
                     )}
                   </div>
 
