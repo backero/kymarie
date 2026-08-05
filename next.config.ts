@@ -28,7 +28,10 @@ const nextConfig: NextConfig = {
     ],
     formats: ["image/avif", "image/webp"],
     // Treat /public/images/** as local (no remote pattern needed)
-    // unoptimized: false (default) — Next.js optimizes local images
+    // Vercel's Image Optimization quota was exhausted (new sizes returning 402),
+    // breaking thumbnails site-wide. Cloudinary already optimizes/CDNs these
+    // images, so skip Vercel's optimizer entirely instead of depending on quota.
+    unoptimized: true,
   },
   experimental: {
     serverActions: {

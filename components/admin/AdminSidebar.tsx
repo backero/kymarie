@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   LogOut,
   ChevronRight,
-  Settings,
   Tag,
   Star,
   ExternalLink,
@@ -37,7 +36,6 @@ const navSections = [
           { label: "Add New", href: "/admin/products/new" },
         ],
       },
-      { label: "Categories", href: "/admin/categories", icon: Tag },
     ],
   },
   {
@@ -51,12 +49,6 @@ const navSections = [
     items: [
       { label: "Coupons", href: "/admin/coupons", icon: Tag },
       { label: "Reviews", href: "/admin/reviews", icon: Star },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { label: "Settings", href: "/admin/settings", icon: Settings },
     ],
   },
 ];
