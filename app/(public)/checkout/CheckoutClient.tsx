@@ -20,8 +20,6 @@ import { cn } from "@/lib/utils";
 import type { RazorpayOptions, RazorpayResponse } from "@/types";
 import toast from "react-hot-toast";
 
-const SHIPPING_THRESHOLD = 599;
-const SHIPPING_FEE = 60;
 
 const DEMO_MODE =
   !process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
@@ -242,16 +240,18 @@ function FormField({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function CheckoutClient({
-  userId, prefill, savedAddresses,
+  userId, prefill, savedAddresses, shippingFee: baseShippingFee = 60, freeShippingThreshold = 599,
 }: {
   userId?: string;
   prefill?: CheckoutPrefill;
   savedAddresses?: SavedAddress[];
+  shippingFee?: number;
+  freeShippingThreshold?: number;
 }) {
   const router = useRouter();
   const { items, clearCart, getSubtotal, couponCode, couponDiscount } = useCart();
   const subtotal = getSubtotal();
-  const shippingFee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const shippingFee = subtotal >= freeShippingThreshold ? 0 : baseShippingFee;
   const total = Math.max(0, subtotal + shippingFee - couponDiscount);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");

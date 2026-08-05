@@ -116,16 +116,54 @@ async function ProductGrid({ searchParams }: { searchParams: SearchParams }) {
   );
 }
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.kumarie.in";
+
 export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const categories = await getCategories();
+  const [categories, { products: allProducts }] = await Promise.all([
+    getCategories(),
+    getProducts({ limit: 24 }),
+  ]);
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: appUrl },
+      { "@type": "ListItem", position: 2, name: "Products", item: `${appUrl}/products` },
+    ],
+  };
+
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Shop All Natural Soaps",
+    url: `${appUrl}/products`,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: allProducts.map((product, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${appUrl}/products/${product.slug}`,
+        name: product.name,
+      })),
+    },
+  };
 
   return (
     <div className="min-h-screen bg-cream-100 pt-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
       <AnimatedProductsHeader />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">

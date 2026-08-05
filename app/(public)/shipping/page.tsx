@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/public/PageHero";
 import { Truck, PackageCheck, MapPin, Clock } from "lucide-react";
+import { getSettings } from "@/actions/settings";
 
 export const metadata: Metadata = {
   title: "Shipping Policy",
@@ -8,30 +9,33 @@ export const metadata: Metadata = {
   alternates: { canonical: "/shipping" },
 };
 
-const points = [
-  {
-    Icon: Clock,
-    title: "Processing Time",
-    desc: "Every order is hand-packed with care within 1-2 business days of being placed.",
-  },
-  {
-    Icon: Truck,
-    title: "Delivery Time",
-    desc: "Once shipped, orders typically arrive within 5-7 business days, depending on your location.",
-  },
-  {
-    Icon: PackageCheck,
-    title: "Shipping Fee",
-    desc: "Free shipping on all orders above ₹599. Orders below that are charged a flat ₹60 shipping fee.",
-  },
-  {
-    Icon: MapPin,
-    title: "Delivery Coverage",
-    desc: "We currently ship across India. If you're outside India and would like to order, write to us at kymariesoaps@gmail.com.",
-  },
-];
+export default async function ShippingPolicyPage() {
+  const settings = await getSettings();
+  const contactEmail = settings.contactEmail || "kymariesoaps@gmail.com";
 
-export default function ShippingPolicyPage() {
+  const points = [
+    {
+      Icon: Clock,
+      title: "Processing Time",
+      desc: "Every order is hand-packed with care within 1-2 business days of being placed.",
+    },
+    {
+      Icon: Truck,
+      title: "Delivery Time",
+      desc: "Once shipped, orders typically arrive within 5-7 business days, depending on your location.",
+    },
+    {
+      Icon: PackageCheck,
+      title: "Shipping Fee",
+      desc: `Free shipping on all orders above ₹${settings.freeShippingThreshold}. Orders below that are charged a flat ₹${settings.shippingFee} shipping fee.`,
+    },
+    {
+      Icon: MapPin,
+      title: "Delivery Coverage",
+      desc: `We currently ship across India. If you're outside India and would like to order, write to us at ${contactEmail}.`,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-cream-100 pt-20">
       <PageHero
@@ -75,10 +79,10 @@ export default function ShippingPolicyPage() {
             <p>
               For anything shipping-related, reach us at{" "}
               <a
-                href="mailto:kymariesoaps@gmail.com"
+                href={`mailto:${contactEmail}`}
                 className="text-forest-600 hover:text-amber-600 underline underline-offset-2"
               >
-                kymariesoaps@gmail.com
+                {contactEmail}
               </a>
               .
             </p>

@@ -13,6 +13,7 @@ const STATUSES = [
   "SHIPPED",
   "DELIVERED",
   "CANCELLED",
+  "REFUNDED",
 ];
 
 export function OrderStatusUpdater({

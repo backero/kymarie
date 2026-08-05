@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { generateOrderNumber } from "@/lib/utils";
+import { sendOrderConfirmationEmail, sendOrderShippedEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -117,10 +118,20 @@ export async function confirmCODOrder(orderId: string) {
   }
 
   revalidatePath("/admin/orders");
+  await sendOrderConfirmationEmail({
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    total: order.total,
+    items: order.items,
+  });
   return { success: true, order };
 }
 
 // ── Confirm Payment & Update Order ───────────────────────────────────────────
+// Called from both the client-driven /api/payment/verify route and the
+// Razorpay webhook — idempotent so whichever fires first "wins" and the
+// second call is a no-op (prevents double stock-decrement/coupon-credit).
 export async function confirmPayment(
   orderId: string,
   paymentData: {
@@ -129,6 +140,14 @@ export async function confirmPayment(
     razorpaySignature: string;
   }
 ) {
+  const existing = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!existing) {
+    return { success: false, error: "Order not found" };
+  }
+  if (existing.paymentStatus === "PAID") {
+    return { success: true, order: existing, alreadyProcessed: true };
+  }
+
   const order = await prisma.order.update({
     where: { id: orderId },
     data: {
@@ -159,7 +178,47 @@ export async function confirmPayment(
   }
 
   revalidatePath("/admin/orders");
-  return { success: true, order };
+  await sendOrderConfirmationEmail({
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    total: order.total,
+    items: order.items,
+  });
+  return { success: true, order, alreadyProcessed: false };
+}
+
+// ── Mark Order Payment Failed (from Razorpay webhook) ────────────────────────
+export async function markOrderPaymentFailed(razorpayOrderId: string) {
+  const order = await prisma.order.findFirst({ where: { razorpayOrderId } });
+  if (!order || order.paymentStatus === "PAID") {
+    return { success: false, error: "Order not found or already paid" };
+  }
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { paymentStatus: "FAILED" },
+  });
+
+  revalidatePath("/admin/orders");
+  return { success: true };
+}
+
+// ── Mark Order Refunded (from Razorpay webhook) ──────────────────────────────
+// Refund webhook payloads carry the payment ID, not the order ID.
+export async function markOrderRefunded(razorpayPaymentId: string) {
+  const order = await prisma.order.findFirst({ where: { razorpayPaymentId } });
+  if (!order) {
+    return { success: false, error: "Order not found" };
+  }
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { status: "REFUNDED", paymentStatus: "REFUNDED" },
+  });
+
+  revalidatePath("/admin/orders");
+  return { success: true };
 }
 
 // ── Get All Orders (admin) ───────────────────────────────────────────────────
@@ -214,10 +273,23 @@ export async function updateOrderStatus(
 ) {
   await requireAdmin();
 
+  const previous = await prisma.order.findUnique({ where: { id } });
+
   const order = await prisma.order.update({
     where: { id },
     data: { status: status as never },
+    include: { items: true },
   });
+
+  if (status === "SHIPPED" && previous?.status !== "SHIPPED") {
+    await sendOrderShippedEmail({
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      total: order.total,
+      items: order.items,
+    });
+  }
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);

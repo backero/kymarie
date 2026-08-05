@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Facebook, Twitter, Mail, MapPin } from "lucide-react";
+import { getSettings } from "@/actions/settings";
 
 const footerLinks = {
   shop: [
@@ -26,7 +27,18 @@ const footerLinks = {
   ],
 };
 
-export function Footer() {
+export async function Footer() {
+  const settings = await getSettings();
+  const contactEmail = settings.contactEmail || "kymariesoaps@gmail.com";
+  const businessAddress =
+    settings.businessAddress ||
+    "42, Interflex Complex, Near 5K Car Care, Trichy Road, Sulur, Coimbatore – 641402";
+  const socialLinks = [
+    { Icon: Instagram, href: settings.instagramUrl, label: "Instagram" },
+    { Icon: Facebook, href: settings.facebookUrl, label: "Facebook" },
+    { Icon: Twitter, href: settings.twitterUrl, label: "Twitter" },
+  ].filter((s) => s.href);
+
   return (
     <footer className="bg-cream-100 border-t border-cream-300">
       {/* Main Footer */}
@@ -51,35 +63,35 @@ export function Footer() {
             </p>
 
             {/* Social Links */}
-            <div className="flex items-center gap-3">
-              {[
-                { Icon: Instagram, href: "#", label: "Instagram" },
-                { Icon: Facebook, href: "#", label: "Facebook" },
-                { Icon: Twitter, href: "#", label: "Twitter" },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="w-9 h-9 flex items-center justify-center border border-cream-300 rounded-full text-sage-400 hover:border-forest-400 hover:text-forest-600 transition-all duration-200"
-                >
-                  <Icon className="w-4 h-4" strokeWidth={1.5} />
-                </a>
-              ))}
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-3">
+                {socialLinks.map(({ Icon, href, label }) => (
+                  <a
+                    key={label}
+                    href={href!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-9 h-9 flex items-center justify-center border border-cream-300 rounded-full text-sage-400 hover:border-forest-400 hover:text-forest-600 transition-all duration-200"
+                  >
+                    <Icon className="w-4 h-4" strokeWidth={1.5} />
+                  </a>
+                ))}
+              </div>
+            )}
 
             {/* Contact */}
             <div className="mt-8 space-y-2">
               <a
-                href="mailto:kymariesoaps@gmail.com"
+                href={`mailto:${contactEmail}`}
                 className="flex items-center gap-2 font-body text-xs text-sage-500 hover:text-amber-600 transition-colors"
               >
                 <Mail className="w-3.5 h-3.5" />
-                kymariesoaps@gmail.com
+                {contactEmail}
               </a>
               <p className="flex items-start gap-2 font-body text-xs text-sage-500">
                 <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                42, Interflex Complex, Near 5K Car Care, Trichy Road, Sulur, Coimbatore – 641402
+                {businessAddress}
               </p>
             </div>
           </div>

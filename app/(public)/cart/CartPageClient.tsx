@@ -1,0 +1,428 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowLeft, ShoppingBag, Minus, Plus, Trash2, ArrowRight, Tag, X, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "@/hooks/useCart";
+import { formatPrice } from "@/lib/utils";
+import { validateCoupon } from "@/actions/coupons";
+import { FadeUp, SlideReveal } from "@/components/animations";
+import toast from "react-hot-toast";
+
+export default function CartPageClient({
+  shippingFee: baseShippingFee,
+  freeShippingThreshold,
+}: {
+  shippingFee: number;
+  freeShippingThreshold: number;
+}) {
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    getSubtotal,
+    couponCode,
+    couponDiscount,
+    setCoupon,
+    clearCoupon,
+  } = useCart();
+  const [confirmClear, setConfirmClear] = useState(false);
+  const subtotal = getSubtotal();
+  const shippingFee = subtotal >= freeShippingThreshold ? 0 : baseShippingFee;
+  const total = Math.max(0, subtotal + shippingFee - couponDiscount);
+
+  const [couponInput, setCouponInput] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setIsApplying(true);
+    try {
+      const result = await validateCoupon(code, subtotal);
+      if (result.success && result.discount !== undefined && result.code) {
+        setCoupon(result.code, result.discount);
+        toast.success(`Coupon "${result.code}" applied`);
+        setCouponInput("");
+      } else {
+        toast.error(result.error || "Invalid coupon");
+      }
+    } catch {
+      toast.error("Failed to apply coupon");
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-cream-100 pt-20">
+      {/* Header */}
+      <FadeUp>
+        <div className="bg-white border-b border-cream-300 py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div whileHover={{ x: -3 }} transition={{ duration: 0.2 }}>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 font-body text-sm text-sage-500 hover:text-forest-600 transition-colors mb-4"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Continue shopping
+              </Link>
+            </motion.div>
+            <h1 className="font-display text-4xl font-light text-forest-700">
+              Your Cart
+              <AnimatePresence mode="wait">
+                {items.length > 0 && (
+                  <motion.span
+                    key={items.length}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 8 }}
+                    transition={{ duration: 0.22 }}
+                    className="font-body text-lg font-normal text-sage-500 ml-3"
+                  >
+                    ({items.length} {items.length === 1 ? "item" : "items"})
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </h1>
+          </div>
+        </div>
+      </FadeUp>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <AnimatePresence mode="wait">
+          {items.length === 0 ? (
+            /* Empty State */
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.35 }}
+              className="flex flex-col items-center justify-center py-24 text-center"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+                className="w-24 h-24 rounded-full bg-cream-200 flex items-center justify-center mb-6"
+              >
+                <ShoppingBag className="w-12 h-12 text-sage-300" strokeWidth={1} />
+              </motion.div>
+              <h2 className="font-display text-3xl text-forest-600 mb-2">
+                Your cart is empty
+              </h2>
+              <p className="font-body text-sage-500 mb-8">
+                Discover our handcrafted soap collection
+              </p>
+              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                <Link href="/products" className="btn-primary">
+                  Browse Products
+                </Link>
+              </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cart"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-10"
+            >
+              {/* Cart Items */}
+              <div className="lg:col-span-2 space-y-4">
+                <AnimatePresence initial={false}>
+                  {items.map((item, i) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{
+                        opacity: 0,
+                        x: -40,
+                        height: 0,
+                        marginBottom: 0,
+                        transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                      }}
+                      transition={{
+                        duration: 0.35,
+                        delay: i * 0.05,
+                        ease: [0.22, 1, 0.36, 1],
+                        layout: { duration: 0.3 },
+                      }}
+                      className="flex gap-5 bg-white border border-cream-300 p-4 md:p-6 overflow-hidden"
+                    >
+                      {/* Image */}
+                      <Link
+                        href={`/products/${item.slug}`}
+                        className="relative w-24 h-24 md:w-32 md:h-32 flex-shrink-0 overflow-hidden bg-cream-200 img-zoom"
+                      >
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                          sizes="128px"
+                        />
+                      </Link>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <Link
+                              href={`/products/${item.slug}`}
+                              className="font-display text-lg font-medium text-forest-700 hover:text-amber-600 transition-colors"
+                            >
+                              {item.name}
+                            </Link>
+                            <p className="font-body text-sm text-sage-500 mt-0.5">
+                              {formatPrice(item.price)} each
+                            </p>
+                          </div>
+                          <motion.button
+                            onClick={() => removeItem(item.id)}
+                            whileHover={{ scale: 1.2, color: "#ef4444" }}
+                            whileTap={{ scale: 0.85 }}
+                            transition={{ duration: 0.15 }}
+                            className="text-sage-400 hover:text-red-500 transition-colors flex-shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                          </motion.button>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-4">
+                          {/* Quantity */}
+                          <div className="flex items-center border border-cream-300">
+                            <motion.button
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              whileTap={{ scale: 0.85 }}
+                              className="w-9 h-9 flex items-center justify-center text-sage-500 hover:text-forest-600 hover:bg-cream-100 transition-colors"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </motion.button>
+                            <AnimatePresence mode="popLayout">
+                              <motion.span
+                                key={item.quantity}
+                                initial={{ opacity: 0, y: -8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 8 }}
+                                transition={{ duration: 0.15 }}
+                                className="w-10 text-center font-body text-sm font-medium text-forest-700"
+                              >
+                                {item.quantity}
+                              </motion.span>
+                            </AnimatePresence>
+                            <motion.button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              disabled={item.quantity >= item.stock}
+                              whileTap={{ scale: 0.85 }}
+                              className="w-9 h-9 flex items-center justify-center text-sage-500 hover:text-forest-600 hover:bg-cream-100 transition-colors disabled:opacity-40"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </motion.button>
+                          </div>
+
+                          {/* Item Total */}
+                          <AnimatePresence mode="popLayout">
+                            <motion.p
+                              key={item.price * item.quantity}
+                              initial={{ opacity: 0, y: -6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 6 }}
+                              transition={{ duration: 0.18 }}
+                              className="font-display text-xl font-medium text-forest-700"
+                            >
+                              {formatPrice(item.price * item.quantity)}
+                            </motion.p>
+                          </AnimatePresence>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                {/* Clear cart with confirmation */}
+                <div className="flex justify-end items-center gap-3">
+                  <AnimatePresence mode="wait">
+                    {confirmClear ? (
+                      <motion.div
+                        key="confirm"
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 8 }}
+                        transition={{ duration: 0.18 }}
+                        className="flex items-center gap-2"
+                      >
+                        <span className="font-body text-xs text-sage-500">Remove all items?</span>
+                        <button
+                          onClick={() => { clearCart(); setConfirmClear(false); }}
+                          className="font-body text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
+                        >
+                          Yes, clear
+                        </button>
+                        <button
+                          onClick={() => setConfirmClear(false)}
+                          className="font-body text-xs text-sage-400 hover:text-forest-500 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </motion.div>
+                    ) : (
+                      <motion.button
+                        key="trigger"
+                        onClick={() => setConfirmClear(true)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="font-body text-xs text-sage-400 hover:text-red-500 transition-colors tracking-wide"
+                      >
+                        Clear all items
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <SlideReveal direction="right" delay={0.1} className="lg:col-span-1">
+                <div className="bg-white border border-cream-300 p-6 sticky top-24">
+                  <h2 className="font-display text-xl font-medium text-forest-700 mb-6 pb-4 border-b border-cream-300">
+                    Order Summary
+                  </h2>
+
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between font-body text-sm">
+                      <span className="text-sage-600">Subtotal</span>
+                      <AnimatePresence mode="popLayout">
+                        <motion.span
+                          key={subtotal}
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ duration: 0.18 }}
+                          className="text-forest-700 font-medium"
+                        >
+                          {formatPrice(subtotal)}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
+                    <div className="flex items-center justify-between font-body text-sm">
+                      <span className="text-sage-600">Shipping</span>
+                      <span
+                        className={
+                          shippingFee === 0
+                            ? "text-forest-500 font-medium"
+                            : "text-forest-700 font-medium"
+                        }
+                      >
+                        {shippingFee === 0 ? "Free" : formatPrice(shippingFee)}
+                      </span>
+                    </div>
+                    {shippingFee > 0 && (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="font-body text-xs text-amber-600 bg-amber-50 px-3 py-2"
+                      >
+                        Add {formatPrice(freeShippingThreshold - subtotal)} more for free shipping
+                      </motion.p>
+                    )}
+                    {couponCode && (
+                      <div className="flex items-center justify-between font-body text-sm">
+                        <span className="text-sage-600 flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-forest-500" />
+                          Coupon ({couponCode})
+                        </span>
+                        <span className="text-forest-500 font-medium">
+                          −{formatPrice(couponDiscount)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Coupon input */}
+                  <div className="mb-6">
+                    {couponCode ? (
+                      <button
+                        type="button"
+                        onClick={clearCoupon}
+                        className="flex items-center gap-1.5 font-body text-xs text-sage-400 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Remove coupon
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())
+                          }
+                          placeholder="Coupon code"
+                          className="flex-1 border border-cream-300 px-3 py-2.5 font-body text-sm text-forest-700 focus:outline-none focus:border-amber-400 bg-cream-50 placeholder-sage-300 uppercase"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={isApplying || !couponInput.trim()}
+                          className="flex items-center justify-center gap-1.5 bg-forest-500 hover:bg-forest-600 disabled:bg-sage-300 text-cream-100 font-body text-xs font-medium px-4 transition-colors whitespace-nowrap"
+                        >
+                          {isApplying ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            "Apply"
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-cream-300 pt-4 mb-6">
+                    <div className="flex items-center justify-between">
+                      <span className="font-body font-semibold text-forest-700">Total</span>
+                      <AnimatePresence mode="popLayout">
+                        <motion.span
+                          key={total}
+                          initial={{ opacity: 0, scale: 0.85 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.85 }}
+                          transition={{ duration: 0.22, type: "spring", stiffness: 400, damping: 25 }}
+                          className="font-display text-2xl font-medium text-forest-700"
+                        >
+                          {formatPrice(total)}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
+                    <p className="font-body text-xs text-sage-400 mt-1">
+                      Including all taxes
+                    </p>
+                  </div>
+
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Link
+                      href="/checkout"
+                      className="flex items-center justify-center gap-2 w-full bg-forest-500 hover:bg-forest-600 text-cream-100 font-body font-medium tracking-widest uppercase text-xs py-4 transition-colors duration-300 group"
+                    >
+                      Proceed to Checkout
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </motion.div>
+                </div>
+              </SlideReveal>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}

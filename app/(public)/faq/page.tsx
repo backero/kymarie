@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/public/PageHero";
 import { ChevronDown } from "lucide-react";
+import { getSettings } from "@/actions/settings";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -8,7 +9,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-const faqGroups = [
+function buildFaqGroups(shippingFee: number, freeShippingThreshold: number, contactEmail: string) {
+  return [
   {
     title: "Orders & Shipping",
     items: [
@@ -18,7 +20,7 @@ const faqGroups = [
       },
       {
         q: "Is shipping free?",
-        a: "Yes — shipping is free on orders above ₹599. Orders below that are charged a flat ₹60 shipping fee.",
+        a: `Yes — shipping is free on orders above ₹${freeShippingThreshold}. Orders below that are charged a flat ₹${shippingFee} shipping fee.`,
       },
       {
         q: "Can I track my order?",
@@ -52,7 +54,7 @@ const faqGroups = [
       },
       {
         q: "How do I start a return?",
-        a: "Email kymariesoaps@gmail.com with your order number and reason for return, and we'll guide you through the next steps.",
+        a: `Email ${contactEmail} with your order number and reason for return, and we'll guide you through the next steps.`,
       },
     ],
   },
@@ -73,11 +75,35 @@ const faqGroups = [
       },
     ],
   },
-];
+  ];
+}
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const settings = await getSettings();
+  const contactEmail = settings.contactEmail || "kymariesoaps@gmail.com";
+  const faqGroups = buildFaqGroups(settings.shippingFee, settings.freeShippingThreshold, contactEmail);
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqGroups.flatMap((group) =>
+      group.items.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a,
+        },
+      }))
+    ),
+  };
+
   return (
     <div className="min-h-screen bg-cream-100 pt-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <PageHero
         eyebrow="Support"
         title="Frequently Asked Questions"

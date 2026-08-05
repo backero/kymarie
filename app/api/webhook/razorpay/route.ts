@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { prisma } from "@/lib/prisma";
+import { confirmPayment, markOrderPaymentFailed, markOrderRefunded } from "@/actions/orders";
 
 // This webhook handles Razorpay payment events server-to-server
 // Set up in Razorpay Dashboard > Webhooks
@@ -27,20 +29,36 @@ export async function POST(req: NextRequest) {
     console.log("Razorpay webhook event:", event.event);
 
     switch (event.event) {
-      case "payment.captured":
-        // Payment was successful - orders are updated via verify endpoint
-        // This is a backup webhook handler
-        console.log("Payment captured:", event.payload.payment.entity.id);
+      case "payment.captured": {
+        // Backup path for when the client-driven /api/payment/verify call
+        // never completes (e.g. user closes the tab after paying).
+        const payment = event.payload.payment.entity;
+        const order = await prisma.order.findFirst({
+          where: { razorpayOrderId: payment.order_id },
+        });
+        if (order) {
+          await confirmPayment(order.id, {
+            razorpayOrderId: payment.order_id,
+            razorpayPaymentId: payment.id,
+            razorpaySignature: signature,
+          });
+        } else {
+          console.error("Webhook payment.captured: no order found for", payment.order_id);
+        }
         break;
+      }
 
-      case "payment.failed":
-        console.log("Payment failed:", event.payload.payment.entity.id);
-        // Update order status if needed
+      case "payment.failed": {
+        const payment = event.payload.payment.entity;
+        await markOrderPaymentFailed(payment.order_id);
         break;
+      }
 
-      case "refund.processed":
-        console.log("Refund processed:", event.payload.refund.entity.id);
+      case "refund.processed": {
+        const refund = event.payload.refund.entity;
+        await markOrderRefunded(refund.payment_id);
         break;
+      }
 
       default:
         console.log("Unhandled event:", event.event);

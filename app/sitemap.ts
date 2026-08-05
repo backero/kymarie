@@ -4,9 +4,19 @@ import { prisma } from "@/lib/prisma";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.kumarie.in";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: appUrl, changeFrequency: "daily", priority: 1 },
-    { url: `${appUrl}/products`, changeFrequency: "daily", priority: 0.9 },
+    { url: appUrl, lastModified: now, changeFrequency: "daily", priority: 1 },
+    { url: `${appUrl}/products`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${appUrl}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${appUrl}/our-story`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${appUrl}/journal`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
+    { url: `${appUrl}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${appUrl}/sustainability`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${appUrl}/returns`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${appUrl}/shipping`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${appUrl}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${appUrl}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   let products: { slug: string; updatedAt: Date }[] = [];

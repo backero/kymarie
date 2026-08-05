@@ -16,7 +16,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice } from "@/lib/utils";
 
-export function CartDrawer() {
+export function CartDrawer({
+  freeShippingThreshold = 599,
+  shippingFee = 60,
+}: {
+  freeShippingThreshold?: number;
+  shippingFee?: number;
+}) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -25,7 +31,6 @@ export function CartDrawer() {
 
   if (!mounted) return null;
   const total = getTotal();
-  const freeShippingThreshold = 599;
   const remainingForFreeShipping = freeShippingThreshold - total;
   const progressPct = Math.min((total / freeShippingThreshold) * 100, 100);
 
@@ -322,7 +327,7 @@ export function CartDrawer() {
                   <p className="font-body text-xs text-sage-400">
                     {total >= freeShippingThreshold
                       ? "Free shipping applied ✓"
-                      : `Shipping: ₹60 (free over ₹${freeShippingThreshold})`}
+                      : `Shipping: ₹${shippingFee} (free over ₹${freeShippingThreshold})`}
                   </p>
 
                   {/* CTA */}

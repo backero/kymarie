@@ -5,7 +5,11 @@ import { MessageCircle } from "lucide-react";
 import { ScrollReveal } from "@/components/public/ScrollReveal";
 import { WordReveal } from "@/components/animations/WordReveal";
 
-export function WhatsAppSection() {
+export function WhatsAppSection({ whatsappNumber }: { whatsappNumber?: string | null }) {
+  const waHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}`
+    : undefined;
+
   return (
     <section className="bg-white py-20 md:py-28 border-y border-cream-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,18 +54,20 @@ export function WhatsAppSection() {
               </p>
             </ScrollReveal>
 
-            <ScrollReveal delay={0.3}>
-              <a
-                href="https://wa.me/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-2 self-center md:self-start px-7 py-3.5 rounded-full font-body font-medium tracking-widest uppercase text-xs text-white transition-opacity hover:opacity-90"
-                style={{ background: "#25D366" }}
-              >
-                <MessageCircle className="w-4 h-4" />
-                Open WhatsApp
-              </a>
-            </ScrollReveal>
+            {waHref && (
+              <ScrollReveal delay={0.3}>
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-2 self-center md:self-start px-7 py-3.5 rounded-full font-body font-medium tracking-widest uppercase text-xs text-white transition-opacity hover:opacity-90"
+                  style={{ background: "#25D366" }}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Open WhatsApp
+                </a>
+              </ScrollReveal>
+            )}
           </div>
         </div>
       </div>

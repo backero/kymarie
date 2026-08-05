@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { SessionProvider } from "next-auth/react";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { auth } from "@/auth";
+import { getSettings } from "@/actions/settings";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.kumarie.in";
@@ -68,16 +69,6 @@ export const metadata: Metadata = {
   },
 };
 
-const organizationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Kumarie",
-  url: appUrl,
-  logo: `${appUrl}/logo.png`,
-  description:
-    "Artisanal handcrafted soaps made with pure botanicals, cold-pressed oils, and ancient herbal wisdom.",
-};
-
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
@@ -98,7 +89,22 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const [session, settings] = await Promise.all([auth(), getSettings()]);
+
+  const sameAs = [settings.instagramUrl, settings.facebookUrl, settings.twitterUrl].filter(
+    (url): url is string => Boolean(url)
+  );
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Kumarie",
+    url: appUrl,
+    logo: `${appUrl}/logo.png`,
+    description:
+      "Artisanal handcrafted soaps made with pure botanicals, cold-pressed oils, and ancient herbal wisdom.",
+    ...(sameAs.length > 0 && { sameAs }),
+  };
 
   return (
     <html lang="en" suppressHydrationWarning>

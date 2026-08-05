@@ -19,7 +19,13 @@ const NAV_LINKS = [
   { label: "Our Story",   href: "/our-story"    },
 ];
 
-export function Navbar() {
+export function Navbar({
+  freeShippingThreshold = 599,
+  shippingFee = 60,
+}: {
+  freeShippingThreshold?: number;
+  shippingFee?: number;
+}) {
   const [scrolled,     setScrolled]     = useState(false);
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [mounted,      setMounted]      = useState(false);
@@ -285,7 +291,7 @@ export function Navbar() {
       </motion.header>
 
       <SearchBar />
-      <CartDrawer />
+      <CartDrawer freeShippingThreshold={freeShippingThreshold} shippingFee={shippingFee} />
     </>
   );
 }

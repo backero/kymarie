@@ -254,6 +254,25 @@ model Coupon {
 }
 
 // ========================================
+// SETTINGS (singleton row, id fixed to "singleton")
+// ========================================
+model Settings {
+  id                    String   @id @default("singleton")
+  shippingFee           Float    @default(60)
+  freeShippingThreshold Float    @default(599)
+  businessAddress       String?
+  contactEmail          String?
+  contactPhone          String?
+  whatsappNumber        String?
+  instagramUrl          String?
+  facebookUrl           String?
+  twitterUrl            String?
+  updatedAt             DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// ========================================
 // ENUMS
 // ========================================
 enum OrderStatus {

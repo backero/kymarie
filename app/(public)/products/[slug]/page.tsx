@@ -60,6 +60,15 @@ export default async function ProductPage({ params }: Props) {
       ? await getWishlistedProductIds(session.user.id)
       : [];
 
+  const additionalProperty = [
+    ...(product.ingredients
+      ? [{ "@type": "PropertyValue", name: "Ingredients", value: product.ingredients }]
+      : []),
+    ...(product.benefits.length > 0
+      ? [{ "@type": "PropertyValue", name: "Benefits", value: product.benefits.join(", ") }]
+      : []),
+  ];
+
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -71,6 +80,14 @@ export default async function ProductPage({ params }: Props) {
       "@type": "Brand",
       name: "Kumarie",
     },
+    ...(additionalProperty.length > 0 && { additionalProperty }),
+    ...(reviewStats.count > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: reviewStats.average,
+        reviewCount: reviewStats.count,
+      },
+    }),
     offers: {
       "@type": "Offer",
       url: `${appUrl}/products/${product.slug}`,

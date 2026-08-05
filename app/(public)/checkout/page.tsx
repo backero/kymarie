@@ -1,17 +1,25 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/actions/settings";
 import CheckoutClient from "./CheckoutClient";
 
 export const metadata = {
   title: "Checkout",
+  robots: { index: false, follow: false },
 };
 
 export default async function CheckoutPage() {
   const session = await auth();
+  const settings = await getSettings();
 
   // Guest checkout — no prefill
   if (!session || session.user?.role !== "user") {
-    return <CheckoutClient />;
+    return (
+      <CheckoutClient
+        shippingFee={settings.shippingFee}
+        freeShippingThreshold={settings.freeShippingThreshold}
+      />
+    );
   }
 
   const userId = session.user.id;
@@ -37,6 +45,8 @@ export default async function CheckoutPage() {
         customerPhone: user?.phone ?? "",
       }}
       savedAddresses={addresses}
+      shippingFee={settings.shippingFee}
+      freeShippingThreshold={settings.freeShippingThreshold}
     />
   );
 }

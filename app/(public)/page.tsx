@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   Leaf,
   Droplets,
@@ -9,6 +10,7 @@ import {
   Feather,
 } from "lucide-react";
 import { getFeaturedProducts } from "@/actions/products";
+import { getSettings } from "@/actions/settings";
 import { CinematicHero } from "@/components/public/CinematicHero";
 import { BrandStory, HorizontalProductScroll } from "@/components/public/BrandStory";
 import { BeforeAfterSection } from "@/components/public/BeforeAfterSection";
@@ -16,6 +18,18 @@ import { WhatsAppSection } from "@/components/public/WhatsAppSection";
 import { ScrollReveal } from "@/components/public/ScrollReveal";
 import { WordReveal } from "@/components/animations/WordReveal";
 import type { Product } from "@/types";
+
+export const metadata: Metadata = {
+  title: "Handcrafted Natural Soaps, Cold-Process & Cruelty-Free",
+  description:
+    "Small-batch, cold-processed soaps made with 100% natural ingredients. No SLS, no parabens, cruelty-free, cured for six weeks. Shop the full Kumarie collection.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Kumarie — Handcrafted Natural Soaps",
+    description:
+      "Small-batch, cold-processed soaps made with 100% natural ingredients. No SLS, no parabens, cruelty-free.",
+  },
+};
 
 // ─── Marquee Strip ─────────────────────────────────────────────────────────────
 function MarqueeStrip() {
@@ -200,7 +214,10 @@ function IngredientsSection() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts(8);
+  const [featuredProducts, settings] = await Promise.all([
+    getFeaturedProducts(8),
+    getSettings(),
+  ]);
 
   return (
     <>
@@ -211,7 +228,7 @@ export default async function HomePage() {
       <BrandStory />
       <BeforeAfterSection />
       <IngredientsSection />
-      <WhatsAppSection />
+      <WhatsAppSection whatsappNumber={settings.whatsappNumber} />
     </>
   );
 }
