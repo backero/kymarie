@@ -8,7 +8,7 @@ import { z } from "zod";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2, ArrowRight, Leaf } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 
@@ -114,18 +114,11 @@ export default function UserLoginPage() {
                 className="w-full border border-cream-300 rounded-xl px-4 py-3 font-body text-sm text-forest-700 focus:outline-none focus:border-forest-400 focus:ring-2 focus:ring-forest-400/10 bg-white placeholder-sage-300 transition-all duration-200"
                 placeholder="you@example.com"
               />
-              <AnimatePresence>
-                {errors.email && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-red-500 text-xs mt-1.5 font-body overflow-hidden"
-                  >
-                    {errors.email.message}
-                  </motion.p>
-                )}
-              </AnimatePresence>
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1.5 font-body">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -152,18 +145,11 @@ export default function UserLoginPage() {
                   )}
                 </button>
               </div>
-              <AnimatePresence>
-                {errors.password && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-red-500 text-xs mt-1.5 font-body overflow-hidden"
-                  >
-                    {errors.password.message}
-                  </motion.p>
-                )}
-              </AnimatePresence>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1.5 font-body">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <button

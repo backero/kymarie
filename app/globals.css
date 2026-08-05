@@ -71,11 +71,21 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-padding-top: 5rem;
+    overflow-x: hidden;
   }
 
   body {
-    @apply bg-background text-foreground font-body;
+    @apply text-foreground font-body;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    background-color: #FAFAF9;
+    /* background-attachment: fixed is broken on iOS Safari — omitted */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 10% 20%, rgba(170,203,189,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 55% at 90% 80%, rgba(240,228,195,0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(255,255,255,0.6) 0%, transparent 70%);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -86,6 +96,11 @@
   ::selection {
     background-color: hsl(var(--amber) / 0.18);
     color: hsl(var(--foreground));
+  }
+
+  /* Consistent image rendering */
+  img {
+    image-rendering: auto;
   }
 }
 
@@ -231,6 +246,40 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* ── Image loading: blur-to-sharp fade ──────────────────────────────────────
+   Apply to Next.js <Image> wrappers to smoothly reveal images as they load.
+   Usage: add className="img-reveal" to the parent container */
+@keyframes img-fade-in {
+  from { opacity: 0; transform: scale(1.01); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.img-reveal img {
+  animation: img-fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Blur-up variant: start blurry, sharpen on load */
+.img-blur-up img {
+  filter: blur(8px);
+  transition: filter 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.img-blur-up img.loaded,
+.img-blur-up img[data-loaded="true"] {
+  filter: blur(0);
+}
+
+/* ── Focus ring — visible only for keyboard navigation ──────────────────── */
+:focus-visible {
+  outline: 2px solid hsl(var(--amber));
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* ── Print Styles ──────────────────────────────────────────────────────────── */

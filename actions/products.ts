@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { generateSlug } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
@@ -58,16 +58,18 @@ export async function getProducts(options?: {
     ];
   }
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: { category: true },
-      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.product.count({ where }),
-  ]);
+  const [products, total] = await withRetry(() =>
+    Promise.all([
+      prisma.product.findMany({
+        where,
+        include: { category: true },
+        orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ])
+  );
 
   return {
     products,
@@ -80,18 +82,19 @@ export async function getProducts(options?: {
 
 // ── Get Single Product ────────────────────────────────────────────────────────
 export async function getProductBySlug(slug: string) {
-  const product = await prisma.product.findFirst({
-    where: { slug, isActive: true },
-    include: {
-      category: true,
-      reviews: {
-        where: { isApproved: true },
-        orderBy: { createdAt: "desc" },
-        take: 10,
+  return withRetry(() =>
+    prisma.product.findFirst({
+      where: { slug, isActive: true },
+      include: {
+        category: true,
+        reviews: {
+          where: { isApproved: true },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        },
       },
-    },
-  });
-  return product;
+    })
+  );
 }
 
 // ── Get Product By ID (admin) ─────────────────────────────────────────────────
@@ -104,12 +107,14 @@ export async function getProductById(id: string) {
 
 // ── Get Featured Products ─────────────────────────────────────────────────────
 export async function getFeaturedProducts(limit = 4) {
-  return prisma.product.findMany({
-    where: { isActive: true, isFeatured: true },
-    include: { category: true },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
+  return withRetry(() =>
+    prisma.product.findMany({
+      where: { isActive: true, isFeatured: true },
+      include: { category: true },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    })
+  );
 }
 
 // ── Get All Products (admin) ──────────────────────────────────────────────────
@@ -203,8 +208,10 @@ export async function toggleProductStatus(id: string) {
 
 // ── Get Categories ────────────────────────────────────────────────────────────
 export async function getCategories() {
-  return prisma.category.findMany({
-    include: { _count: { select: { products: true } } },
-    orderBy: { name: "asc" },
-  });
+  return withRetry(() =>
+    prisma.category.findMany({
+      include: { _count: { select: { products: true } } },
+      orderBy: { name: "asc" },
+    })
+  );
 }
